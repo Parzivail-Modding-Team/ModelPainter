@@ -120,16 +120,19 @@ namespace ModelPainter.Controls
 
 		private void UpdateContainerSizes()
 		{
-			using (this.SuspendPainting())
+			using (Panel1.SuspendPainting())
 			{
 				Panel1.Location = new Point(0, 0);
 				Panel1.Size = new Size(SplitterDistance - (int)Math.Ceiling(SplitterWidth / 2f), Height);
-				Panel1.Invalidate();
+			}
 
+			using (Panel2.SuspendPainting())
+			{
 				Panel2.Location = new Point(SplitterDistance + Panel2.Margin.Left, 0);
 				Panel2.Size = new Size(Width - SplitterDistance - SplitterWidth / 2, Height);
-				Panel2.Invalidate();
 			}
+
+			Invalidate();
 		}
 	}
 }

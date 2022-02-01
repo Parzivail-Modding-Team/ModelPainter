@@ -1,12 +1,13 @@
-﻿using System.Runtime.InteropServices;
-using ModelPainter.Extensions;
-using ModelPainter.Model;
+﻿using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using ModelPainter.Render.Shader;
+using ModelPainter.Resources;
 using ModelPainter.View;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
 namespace ModelPainter.Render;
 
@@ -34,7 +35,7 @@ public class ModelRenderer
 	private PixelBuffer<float> _uvBuffer;
 
 	private uint _selectedCuboidId;
-	private int _modelTexture;
+	private int _modelTexture = -1;
 
 	private Camera _camera;
 
@@ -42,6 +43,10 @@ public class ModelRenderer
 	private int _zoom = 1;
 	private Vector2 _rotation = new(-35.264f, 45);
 	private Vector3 _translation = Vector3.Zero;
+
+	private int _loadBitmapWidth;
+	private int _loadBitmapHeight;
+	private byte[] _loadBitmap;
 
 	public ModelRenderer(GlControlContext renderContext)
 	{
@@ -171,11 +176,11 @@ public class ModelRenderer
 			_selectionBuffer = new PixelBuffer<uint>(1, PixelFormat.Bgra, PixelType.UnsignedInt8888);
 			_uvBuffer = new PixelBuffer<float>(2, PixelFormat.Rg, PixelType.Float);
 
-			_shaderScreen = new ShaderProgram(File.ReadAllText("Resources/screen.frag"), File.ReadAllText("Resources/screen.vert"));
+			_shaderScreen = new ShaderProgram(ResourceHelper.GetLocalStringResource("screen.frag"), ResourceHelper.GetLocalStringResource("screen.vert"));
 			_shaderScreen.Uniforms.SetValue("texScene", 0);
 			_shaderScreen.Uniforms.SetValue("samplesScene", _viewFbo.Samples);
 
-			_shaderModel = new ShaderProgram(File.ReadAllText("Resources/model.frag"), File.ReadAllText("Resources/model.vert"));
+			_shaderModel = new ShaderProgram(ResourceHelper.GetLocalStringResource("model.frag"), ResourceHelper.GetLocalStringResource("model.vert"));
 			_shaderModel.Uniforms.SetValue("texModel", 1);
 			_shaderModel.Uniforms.SetValue("lightPos", new Vector3(0.6f, -1, 0.8f));
 		}
@@ -190,6 +195,31 @@ public class ModelRenderer
 
 			_selectionBuffer.Init(width, height);
 			_uvBuffer.Init(width, height);
+		}
+
+		if (_loadBitmap != null)
+		{
+			var needsInit = _modelTexture == -1;
+
+			if (needsInit)
+				_modelTexture = GL.GenTexture();
+
+			GL.ActiveTexture(TextureUnit.Texture1);
+
+			GL.BindTexture(TextureTarget.Texture2D, _modelTexture);
+			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, _loadBitmapWidth, _loadBitmapHeight, 0, PixelFormat.Bgra, PixelType.UnsignedByte, _loadBitmap);
+
+			if (needsInit)
+			{
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+			}
+
+			GL.BindTexture(TextureTarget.Texture2D, 0);
+
+			_loadBitmap = null;
 		}
 
 		var aspectRatio = width / (float)height;
@@ -216,12 +246,12 @@ public class ModelRenderer
 
 		GL.Enable(EnableCap.DepthTest);
 
-		_viewFbo.Use();
-		GL.ClearColor(Color.FromArgb(0x404040));
-		GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
 		// 3D Viewport
 		{
+			_viewFbo.Use();
+			GL.ClearColor(Color.FromArgb(0x404040));
+			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
 			GL.PushMatrix();
 
 			GL.MatrixMode(MatrixMode.Projection);
@@ -266,6 +296,8 @@ public class ModelRenderer
 
 			_uvBuffer.Read();
 			_uvFbo.Release();
+
+			GL.BindTexture(TextureTarget.Texture2D, 0);
 		}
 
 		_viewFbo.Use();
@@ -387,7 +419,14 @@ public class ModelRenderer
 
 	public void SetTexture(Bitmap bitmap)
 	{
-		_modelTexture = bitmap.LoadGlTexture();
+		_loadBitmap = new byte[bitmap.Width * bitmap.Height * 4];
+		var data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+		Marshal.Copy(data.Scan0, _loadBitmap, 0, _loadBitmap.Length);
+		bitmap.UnlockBits(data);
+
+		_loadBitmapWidth = bitmap.Width;
+		_loadBitmapHeight = bitmap.Height;
+
 		_renderContext.MarkDirty();
 	}
 
@@ -401,35 +440,5 @@ public class ModelRenderer
 		_vbo.InitializeVbo(v, n, t, id, e);
 
 		_renderContext.MarkDirty();
-	}
-
-	public static (VboData ModelData, Dictionary<uint, Guid> IdMap) BuildModelQuads(List<ModelPart> modelParts, float dialation = 0)
-	{
-		var objectIdMap = new Dictionary<uint, Guid>();
-
-		var startingId = 1u;
-
-		var vertices = new List<VboVertex>();
-		var matrices = new MatrixStack();
-
-		foreach (var part in modelParts)
-			part.Render(matrices, vertices, dialation, objectIdMap, ref startingId);
-
-		var v = new Vector3[vertices.Count];
-		var n = new Vector3[vertices.Count];
-		var t = new Vector2[vertices.Count];
-		var id = new uint[vertices.Count];
-		var e = new uint[vertices.Count];
-
-		for (var i = 0; i < vertices.Count; i++)
-		{
-			v[i] = vertices[i].Position;
-			n[i] = vertices[i].Normal;
-			t[i] = vertices[i].Tex;
-			id[i] = vertices[i].ObjectId;
-			e[i] = (uint)i;
-		}
-
-		return (new VboData(v, n, t, id, e), objectIdMap);
 	}
 }

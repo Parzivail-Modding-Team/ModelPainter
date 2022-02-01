@@ -5,12 +5,13 @@ namespace ModelPainter.Extensions
 {
 	public static class BitmapExt
 	{
-		public static int LoadGlTexture(this Bitmap bitmap)
+		public static int LoadGlTexture(this Bitmap bitmap, int textureId = -1)
 		{
 			GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
 
-			GL.GenTextures(1, out int tex);
-			GL.BindTexture(TextureTarget.Texture2D, tex);
+			if (textureId == -1)
+				GL.GenTextures(1, out textureId);
+			GL.BindTexture(TextureTarget.Texture2D, textureId);
 
 			var data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
@@ -22,7 +23,7 @@ namespace ModelPainter.Extensions
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
 
-			return tex;
+			return textureId;
 		}
 	}
 }

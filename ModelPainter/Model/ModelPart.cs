@@ -13,8 +13,8 @@ namespace ModelPainter.Model
 
 		public event EventHandler<EventArgs> ModelChanged;
 
-		public List<Cuboid> Cuboids { get; } = new();
-		public List<ModelPart> Parts { get; } = new();
+		public List<Cuboid> Cuboids { get; init; } = new();
+		public List<ModelPart> Parts { get; init; } = new();
 
 		public string Name { get; set; } = "Part";
 
@@ -38,8 +38,6 @@ namespace ModelPainter.Model
 			}
 		}
 
-		public int TextureOffsetU { get; set; }
-		public int TextureOffsetV { get; set; }
 		public float PivotX { get; set; }
 		public float PivotY { get; set; }
 		public float PivotZ { get; set; }
@@ -49,12 +47,9 @@ namespace ModelPainter.Model
 		public bool Mirror { get; set; }
 		public bool Visible { get; set; } = true;
 
-		public ModelPart(int textureOffsetU, int textureOffsetV)
+		public ModelPart()
 		{
 			Id = Guid.NewGuid();
-
-			TextureOffsetU = textureOffsetU;
-			TextureOffsetV = textureOffsetV;
 		}
 
 		private void OnChildPartChanged(object sender, EventArgs e)
@@ -90,21 +85,6 @@ namespace ModelPainter.Model
 			PivotX = x;
 			PivotY = y;
 			PivotZ = z;
-		}
-
-		public void AddCuboid(float x, float y, float z, float sizeX, float sizeY, float sizeZ, float extra, float dialation = 0)
-		{
-			AddCuboid(TextureOffsetU, TextureOffsetV, x, y, z, sizeX, sizeY, sizeZ, extra, extra, extra, Mirror, dialation);
-		}
-
-		public void AddCuboid(float x, float y, float z, float sizeX, float sizeY, float sizeZ, float extraX, float extraY, float extraZ, float dialation = 0)
-		{
-			AddCuboid(TextureOffsetU, TextureOffsetV, x, y, z, sizeX, sizeY, sizeZ, extraX, extraY, extraZ, Mirror, dialation);
-		}
-
-		public void AddCuboid(float x, float y, float z, float sizeX, float sizeY, float sizeZ, float extra, bool mirror, float dialation = 0)
-		{
-			AddCuboid(TextureOffsetU, TextureOffsetV, x, y, z, sizeX, sizeY, sizeZ, extra, extra, extra, mirror, dialation);
 		}
 
 		private void AddCuboid(int u, int v, float x, float y, float z, float sizeX, float sizeY, float sizeZ, float extraX, float extraY, float extraZ, bool mirror, float dialation = 0)

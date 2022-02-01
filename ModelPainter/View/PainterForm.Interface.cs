@@ -1,4 +1,5 @@
 ﻿using ModelPainter.Controls;
+using ModelPainter.Model.NEM;
 using ModelPainter.Util;
 using OpenTK;
 using OpenTK.Graphics;
@@ -126,7 +127,10 @@ public partial class PainterForm : Form
 		_bEditSettings.Click += (sender, args) =>
 		{
 			if (new SettingsForm(SETTINGS_FILENAME).ShowDialog(this) == DialogResult.OK)
+			{
 				_settings = ModelPainterSettings.Load(SETTINGS_FILENAME);
+				OnSettingsChanged();
+			}
 		};
 
 		_bReset3dViewport.Click += (sender, args) => _renderer3d.ResetView();
@@ -136,6 +140,7 @@ public partial class PainterForm : Form
 
 		SetupRenderer();
 
+		OnSettingsChanged();
 		UpdateAbility();
 	}
 
@@ -150,6 +155,12 @@ public partial class PainterForm : Form
 			case ".png":
 			{
 				_imageWatcher.Watch(filename);
+				break;
+			}
+			case ".nem":
+			{
+				var nem = NbtEntityModel.Load(filename);
+				LoadModelParts(nem.Parts);
 				break;
 			}
 		}

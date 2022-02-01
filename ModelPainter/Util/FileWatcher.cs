@@ -1,28 +1,26 @@
-﻿namespace ModelPainter.Util;
+﻿#nullable enable
+namespace ModelPainter.Util;
 
 public class FileWatcher
 {
-	private FileSystemWatcher _watcher;
+	private PollingFileSystemWatcher _watcher;
+	private string _filename;
 
 	public event EventHandler<FileStream> FileChanged;
 
 	public void Watch(string filename)
 	{
-		filename = Path.GetFullPath(filename);
+		_filename = Path.GetFullPath(filename);
 		// Create a new FileSystemWatcher and set its properties.
 		_watcher?.Dispose();
-		_watcher = new FileSystemWatcher
+		_watcher = new PollingFileSystemWatcher(Path.GetDirectoryName(filename), Path.GetFileName(filename))
 		{
-			Path = Path.GetDirectoryName(filename),
-			NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Attributes | NotifyFilters.FileName,
-			Filter = Path.GetFileName(filename)
+			PollingInterval = 500
 		};
 
-		// Add event handlers.
 		_watcher.Changed += OnChanged;
+		_watcher.Start();
 
-		// Begin watching.
-		_watcher.EnableRaisingEvents = true;
 		WaitAndNotify(filename);
 	}
 
@@ -46,10 +44,9 @@ public class FileWatcher
 		return null;
 	}
 
-	private void OnChanged(object sender, FileSystemEventArgs e)
+	private void OnChanged(object? sender, EventArgs eventArgs)
 	{
-		Console.WriteLine("OnChanged");
-		WaitAndNotify(e.FullPath);
+		WaitAndNotify(_filename);
 	}
 
 	private void WaitAndNotify(string filename)

@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="minecraft-dotnet.Substrate" Version="2.0.44-alpha"/>
         <PackageReference Include="OpenTK.GLControl" Version="3.1.0"/>
         <PackageReference Include="SkiaSharp" Version="2.88.0-preview.187"/>
         <PackageReference Include="SkiaSharp.Views.WindowsForms" Version="2.88.0-preview.187"/>
@@ -17,21 +18,24 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="Resources\model.frag">
+        <ProjectReference Include="..\System.IO.FileSystem.Watcher.Polling\System.IO.FileSystem.Watcher.Polling.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Resources\model.frag"/>
+        <EmbeddedResource Include="Resources\model.frag"/>
+        <None Remove="Resources\model.vert"/>
+        <EmbeddedResource Include="Resources\model.vert">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Resources\model.vert">
+        </EmbeddedResource>
+        <None Remove="Resources\screen.frag"/>
+        <EmbeddedResource Include="Resources\screen.frag">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Resources\screen.frag">
+        </EmbeddedResource>
+        <None Remove="Resources\screen.vert"/>
+        <EmbeddedResource Include="Resources\screen.vert">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Resources\screen.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Resources\parrot.png">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+        </EmbeddedResource>
     </ItemGroup>
 
 </Project>

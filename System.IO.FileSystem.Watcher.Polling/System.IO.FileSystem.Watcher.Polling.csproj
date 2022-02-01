@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Description>Polling file system watcher</Description>
+        <TargetFramework>net6.0</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PackageTags>.NET Core FileSystemWatcher Polling corefxlab</PackageTags>
+        <LangVersion>10</LangVersion>
+    </PropertyGroup>
+</Project>

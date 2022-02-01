@@ -58,7 +58,7 @@ public class ControlContext<T> : IRenderContext where T : Control
 	}
 
 	/// <inheritdoc />
-	public void MarkDirty()
+	public virtual void MarkDirty()
 	{
 		_control.Invalidate();
 	}

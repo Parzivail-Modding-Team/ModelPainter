@@ -26,17 +26,17 @@ void main()
         return;
     }
 
-    if (objectIdMode == ObjectIdModeTexCoord)
-    {
-        color = vec4(vec3(fragTexCoord, 0.0), 1.0);
-        return;
-    }
-
     vec4 samp = texture(texModel, fragTexCoord);
 
     if (samp.a < 1)
     {
         discard;
+    }
+
+    if (objectIdMode == ObjectIdModeTexCoord)
+    {
+        color = vec4(vec3(fragTexCoord, 0.0), 1.0);
+        return;
     }
 
     if (objectIdMode == ObjectIdModeDisabled)

@@ -50,6 +50,7 @@ public class SurfaceRenderer : IDisposable
 	private SKSizeI _size;
 	private SKSizeI _lastSize;
 	private GRBackendRenderTarget _renderTarget;
+	private bool _invertColors;
 
 	public SurfaceRenderer(GlControlContext renderContext)
 	{
@@ -95,11 +96,14 @@ public class SurfaceRenderer : IDisposable
 			_texture = bitmap;
 		}
 
-		_textureWidth = bitmap.Width;
-		_textureHeight = bitmap.Height;
+		if (bitmap.Width != _textureWidth || bitmap.Height != _textureHeight)
+		{
+			_textureWidth = bitmap.Width;
+			_textureHeight = bitmap.Height;
 
-		ContentTransformation = SKMatrix.Identity
-			.PreConcat(SKMatrix.CreateTranslation((_renderContext.Width - _textureWidth) / 2f, (_renderContext.Height - _textureHeight) / 2f));
+			ContentTransformation = SKMatrix.Identity
+				.PreConcat(SKMatrix.CreateTranslation((_renderContext.Width - _textureWidth) / 2f, (_renderContext.Height - _textureHeight) / 2f));
+		}
 
 		_renderContext.MarkDirty();
 	}
@@ -175,8 +179,8 @@ public class SurfaceRenderer : IDisposable
 
 	private void Render(SKCanvas canvas)
 	{
-		var checkerboardColor1 = new SKColor(0xFF_EFEFEF);
-		var checkerboardColor2 = new SKColor(0xFF_CFCFCF);
+		var checkerboardColor1 = new SKColor(_invertColors ? 0xFF_2F2F2F : 0xFF_EFEFEF);
+		var checkerboardColor2 = new SKColor(_invertColors ? 0xFF_4F4F4F : 0xFF_CFCFCF);
 
 		canvas.Clear(checkerboardColor1);
 
@@ -199,7 +203,7 @@ public class SurfaceRenderer : IDisposable
 
 		using var paint = new SKPaint
 		{
-			Color = 0xFF_000000,
+			Color = _invertColors ? 0xFF_FFFFFF : 0xFF_000000,
 			IsStroke = true
 		};
 
@@ -275,5 +279,11 @@ public class SurfaceRenderer : IDisposable
 	{
 		_uvMapPath?.Dispose();
 		_texture?.Dispose();
+	}
+
+	public void SetInvertColors(bool invert)
+	{
+		_invertColors = invert;
+		_renderContext.MarkDirty();
 	}
 }

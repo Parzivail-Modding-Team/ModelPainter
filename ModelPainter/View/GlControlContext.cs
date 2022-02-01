@@ -4,11 +4,16 @@ namespace ModelPainter.View;
 
 public class GlControlContext : ControlContext<GLControl>
 {
+	private readonly ManualResetEventSlim _dirtyHandle;
+
 	public Action RenderFrame;
 
+	public bool IsDirty { get; private set; } = true;
+
 	/// <inheritdoc />
-	public GlControlContext(GLControl control) : base(control)
+	public GlControlContext(GLControl control, ManualResetEventSlim dirtyHandle) : base(control)
 	{
+		_dirtyHandle = dirtyHandle;
 		control.Paint += (sender, args) =>
 		{
 			if (sender is not GLControl gl)
@@ -18,6 +23,12 @@ public class GlControlContext : ControlContext<GLControl>
 			RenderFrame?.Invoke();
 			gl.SwapBuffers();
 		};
+	}
+
+	/// <inheritdoc />
+	public override void MarkDirty()
+	{
+		_dirtyHandle.Set();
 	}
 
 	public void MakeCurrent()

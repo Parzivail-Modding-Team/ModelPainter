@@ -6,12 +6,12 @@ namespace ModelPainter;
 public class ModelPainterSettings
 {
 	[
-		Category("Temporary"),
-		DisplayName("Dummy Setting"),
-		Description("Added to make sure the settings menu works."),
+		Category("2D Viewport"),
+		DisplayName("Invert Color Scheme"),
+		Description("Whether to use a white UV outline and dark background."),
 		DefaultValue(false)
 	]
-	public bool DummySetting { get; set; } = false;
+	public bool LightMode2d { get; set; } = false;
 
 	public void Save(string filename)
 	{
