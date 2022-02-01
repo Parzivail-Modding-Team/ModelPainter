@@ -1,14 +1,17 @@
 ﻿using ModelPainter.View;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using SkiaSharp;
-using SkiaSharp.Views.Desktop;
 
 namespace ModelPainter.Render;
 
-public class SurfaceRenderer
+public class SurfaceRenderer : IDisposable
 {
-	private readonly SkControlContext _renderContext;
+	private const SKColorType ColorType = SKColorType.Rgba8888;
+	private const GRSurfaceOrigin SurfaceOrigin = GRSurfaceOrigin.BottomLeft;
+
+	private readonly GlControlContext _renderContext;
 
 	private static readonly float _transparentCheckerboardScale = 8f;
 	private static readonly SKPaint _transparentCheckerboardPaint;
@@ -16,7 +19,7 @@ public class SurfaceRenderer
 
 	static SurfaceRenderer()
 	{
-		var path = new SKPath();
+		using var path = new SKPath();
 		path.AddRect(new SKRect(0, 0, _transparentCheckerboardScale, _transparentCheckerboardScale));
 		var matrix = SKMatrix.CreateScale(2 * _transparentCheckerboardScale, _transparentCheckerboardScale)
 			.PreConcat(SKMatrix.CreateSkew(0.5f, 0));
@@ -32,20 +35,29 @@ public class SurfaceRenderer
 		};
 	}
 
-	private readonly object _textureLock = new object();
+	private readonly object _textureLock = new();
+	private readonly SKPath _uvMapPath = new();
 	private SKBitmap _texture;
 	private int _textureWidth;
 	private int _textureHeight;
-	private VboData _vboData;
 	private KeyValuePair<string, string>[] _hudData;
+	private Vector2? _previewedUv;
 
-	public SurfaceRenderer(SkControlContext renderContext)
+	private SKCanvas _canvas;
+	private SKSurface _surface;
+	private GRGlFramebufferInfo _glInfo;
+	private GRContext _grContext;
+	private SKSizeI _size;
+	private SKSizeI _lastSize;
+	private GRBackendRenderTarget _renderTarget;
+
+	public SurfaceRenderer(GlControlContext renderContext)
 	{
 		_renderContext = renderContext;
 
 		_renderContext.MouseMove += OnMouseMove;
 		_renderContext.MouseWheel += OnMouseWheel;
-		_renderContext.RenderFrame += Render;
+		_renderContext.RenderFrame = Render;
 	}
 
 	public SKMatrix ContentTransformation { get; set; } = SKMatrix.Identity;
@@ -92,17 +104,85 @@ public class SurfaceRenderer
 		_renderContext.MarkDirty();
 	}
 
-	private void Render(object sender, SKPaintSurfaceEventArgs args)
+	public void SetPreviewedUv(Vector2? uv)
+	{
+		_previewedUv = uv;
+
+		_renderContext.MarkDirty();
+	}
+
+	private void Render()
+	{
+		const ClearBufferMask bits = ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit |
+		                             ClearBufferMask.StencilBufferBit;
+		// Reset the view
+		GL.Clear(bits);
+
+		var width = Math.Max(_renderContext.Width, 1);
+		var height = Math.Max(_renderContext.Height, 1);
+
+		// get the new surface size
+		_size = new SKSizeI(width, height);
+
+		// create the contexts if not done already
+		if (_grContext == null)
+		{
+			var glInterface = GRGlInterface.Create();
+			_grContext = GRContext.CreateGl(glInterface);
+		}
+
+		// manage the drawing surface
+		if (_renderTarget == null || _lastSize != _size || !_renderTarget.IsValid)
+		{
+			// create or update the dimensions
+			_lastSize = _size;
+
+			// GL.GetInteger(GetPName.StencilBits, out var stencil);
+			GL.GetInteger(GetPName.Samples, out var samples);
+			var maxSamples = _grContext.GetMaxSurfaceSampleCount(ColorType);
+			if (samples > maxSamples)
+				samples = maxSamples;
+			_glInfo = new GRGlFramebufferInfo(0, ColorType.ToGlSizedFormat());
+
+			// destroy the old surface
+			_surface?.Dispose();
+			_surface = null;
+			_canvas = null;
+
+			// re-create the render target
+			_renderTarget?.Dispose();
+			_renderTarget = new GRBackendRenderTarget(_size.Width, _size.Height, samples, 8, _glInfo);
+		}
+
+		// create the surface
+		if (_surface == null)
+		{
+			_surface = SKSurface.Create(_grContext, _renderTarget, SurfaceOrigin, ColorType);
+			_canvas = _surface.Canvas;
+		}
+
+		if (_surface == null || _canvas == null)
+			throw new InvalidOperationException();
+
+		_canvas.Clear(SKColors.White);
+
+		// render the canvas
+		using (new SKAutoCanvasRestore(_canvas, true))
+			Render(_canvas);
+
+		_canvas.Flush();
+	}
+
+	private void Render(SKCanvas canvas)
 	{
 		var checkerboardColor1 = new SKColor(0xFF_EFEFEF);
 		var checkerboardColor2 = new SKColor(0xFF_CFCFCF);
 
-		var canvas = args.Surface.Canvas;
 		canvas.Clear(checkerboardColor1);
 
 		_transparentCheckerboardPaint.Color = checkerboardColor2;
 
-		var rect = new SKRect(0, 0, args.Info.Width, args.Info.Height);
+		var rect = new SKRect(0, 0, _size.Width, _size.Height);
 		rect.Inflate(_transparentCheckerboardScale, _transparentCheckerboardScale);
 		canvas.DrawRect(rect, _transparentCheckerboardPaint);
 
@@ -117,30 +197,35 @@ public class SurfaceRenderer
 			}
 		}
 
-		if (_vboData != null)
+		using var paint = new SKPaint
 		{
-			using var paint = new SKPaint()
-			{
-				Color = 0xFF_000000,
-				IsStroke = false
-			};
+			Color = 0xFF_000000,
+			IsStroke = true
+		};
 
-			var size = new Vector2(_textureWidth, _textureHeight);
-			for (var i = 0; i < _vboData.Elements.Length; i += 4)
-			{
-				var p1 = size * _vboData.TexCoords[i];
-				var p2 = size * _vboData.TexCoords[i + 1];
-				var p3 = size * _vboData.TexCoords[i + 2];
-				var p4 = size * _vboData.TexCoords[i + 3];
+		if (_uvMapPath != null)
+		{
+			canvas.Save();
+			canvas.Scale(_textureWidth, _textureHeight);
+			canvas.DrawPath(_uvMapPath, paint);
+			canvas.Restore();
+		}
 
-				canvas.DrawLine(p1.X, p1.Y, p2.X, p2.Y, paint);
-				canvas.DrawLine(p2.X, p2.Y, p3.X, p3.Y, paint);
-				canvas.DrawLine(p3.X, p3.Y, p4.X, p4.Y, paint);
-				canvas.DrawLine(p4.X, p4.Y, p1.X, p1.Y, paint);
-			}
+		if (_previewedUv != null)
+		{
+			var uv = _previewedUv.Value;
+			var u = (int)Math.Floor(uv.X * _textureWidth);
+			var v = (int)Math.Floor(uv.Y * _textureHeight);
 
-			paint.IsStroke = true;
-			canvas.DrawRect(0, 0, _textureWidth, _textureHeight, paint);
+			var intervals = new[] { 0.2f, 0.2f };
+
+			paint.PathEffect = SKPathEffect.CreateDash(intervals, 0);
+			paint.Color = 0xFF_000000;
+			canvas.DrawRect(u, v, 1, 1, paint);
+
+			paint.PathEffect = SKPathEffect.CreateDash(intervals, intervals[0]);
+			paint.Color = 0xFF_FFFFFF;
+			canvas.DrawRect(u, v, 1, 1, paint);
 		}
 
 		canvas.Restore();
@@ -166,6 +251,29 @@ public class SurfaceRenderer
 
 	public void SetVboData(VboData vboData)
 	{
-		_vboData = vboData;
+		_uvMapPath.Reset();
+
+		for (var i = 0; i < vboData.Elements.Length; i += 4)
+		{
+			var p1 = vboData.TexCoords[i];
+			var p2 = vboData.TexCoords[i + 1];
+			var p3 = vboData.TexCoords[i + 2];
+			var p4 = vboData.TexCoords[i + 3];
+
+			_uvMapPath.MoveTo(p1.X, p1.Y);
+			_uvMapPath.LineTo(p2.X, p2.Y);
+			_uvMapPath.LineTo(p3.X, p3.Y);
+			_uvMapPath.LineTo(p4.X, p4.Y);
+			_uvMapPath.Close();
+		}
+
+		_uvMapPath.AddRect(new SKRect(0, 0, 1, 1));
+	}
+
+	/// <inheritdoc />
+	public void Dispose()
+	{
+		_uvMapPath?.Dispose();
+		_texture?.Dispose();
 	}
 }

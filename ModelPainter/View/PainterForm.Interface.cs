@@ -1,7 +1,7 @@
 ﻿using ModelPainter.Controls;
+using ModelPainter.Util;
 using OpenTK;
 using OpenTK.Graphics;
-using SkiaSharp.Views.Desktop;
 
 namespace ModelPainter.View;
 
@@ -17,12 +17,15 @@ public partial class PainterForm : Form
 	private readonly ToolStripMenuItem _bReset2dViewport;
 
 	private readonly MinimalSplitContainer _splitContainer;
-	private readonly GLControl _glControl;
-	private readonly SKControl _imageControl;
+	private readonly GLControl _modelControl;
+	private readonly GLControl _imageControl;
 
 	private ToolStripMenuItem _bEditSettings;
 
 	private ModelPainterSettings _settings;
+
+	private FileWatcher _modelWatcher = new();
+	private FileWatcher _imageWatcher = new();
 
 	public PainterForm()
 	{
@@ -41,10 +44,9 @@ public partial class PainterForm : Form
 			{
 				Controls =
 				{
-					(_glControl = new GLControl(new GraphicsMode(new ColorFormat(8), 24, 8, 1))
+					(_modelControl = new GLControl(new GraphicsMode(new ColorFormat(8), 24, 8, 1))
 					{
-						Dock = DockStyle.Fill,
-						VSync = true
+						Dock = DockStyle.Fill
 					}),
 				}
 			},
@@ -52,7 +54,7 @@ public partial class PainterForm : Form
 			{
 				Controls =
 				{
-					(_imageControl = new SKControl
+					(_imageControl = new GLControl(new GraphicsMode(new ColorFormat(8), 24, 8, 1))
 					{
 						Dock = DockStyle.Fill
 					})
@@ -143,6 +145,13 @@ public partial class PainterForm : Form
 
 	private void Open(string filename)
 	{
-		throw new NotImplementedException();
+		switch (Path.GetExtension(filename))
+		{
+			case ".png":
+			{
+				_imageWatcher.Watch(filename);
+				break;
+			}
+		}
 	}
 }

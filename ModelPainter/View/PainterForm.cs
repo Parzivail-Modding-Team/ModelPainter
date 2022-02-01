@@ -1,5 +1,6 @@
 ﻿using ModelPainter.Model;
 using ModelPainter.Render;
+using OpenTK;
 using SkiaSharp.Views.Desktop;
 
 namespace ModelPainter.View;
@@ -8,21 +9,49 @@ public partial class PainterForm
 {
 	private GlControlContext _render3dContext;
 	private ModelRenderer _renderer3d;
-	private SkControlContext _render2dContext;
+	private GlControlContext _render2dContext;
 	private SurfaceRenderer _renderer2d;
 
 	private void SetupRenderer()
 	{
-		_render3dContext = new GlControlContext(_glControl);
+		_render3dContext = new GlControlContext(_modelControl);
 		_renderer3d = new ModelRenderer(_render3dContext);
 
-		_render2dContext = new SkControlContext(_imageControl);
+		_render2dContext = new GlControlContext(_imageControl);
 		_renderer2d = new SurfaceRenderer(_render2dContext);
 
-		using var bmp = new Bitmap("Resources/parrot.png");
-		_renderer3d.SetTexture(bmp);
+		_modelControl.MouseMove += (sender, args) =>
+		{
+			if (args.Button != MouseButtons.None)
+				return;
 
-		_renderer2d.SetTexture(bmp.ToSKBitmap(), Array.Empty<KeyValuePair<string, string>>());
+			var pointedUv = _renderer3d.GetObjectUvAt(args.X, args.Y);
+			if (pointedUv == Vector2.Zero)
+				_renderer2d.SetPreviewedUv(null);
+			else
+				_renderer2d.SetPreviewedUv(pointedUv);
+		};
+
+		_imageWatcher.FileChanged += (sender, stream) =>
+		{
+			if (stream == null)
+				return;
+
+			using (stream)
+			{
+				try
+				{
+					using var bmp = new Bitmap(stream);
+					_renderer3d.SetTexture(bmp);
+					_renderer2d.SetTexture(bmp.ToSKBitmap(), null);
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine("Error loading image");
+					Console.WriteLine(e);
+				}
+			}
+		};
 
 		var parts = new List<ModelPart>();
 
@@ -84,5 +113,12 @@ public partial class PainterForm
 
 		(modelData, _) = ModelRenderer.BuildModelQuads(parts);
 		_renderer2d.SetVboData(modelData);
+	}
+
+	/// <inheritdoc />
+	protected override void Dispose(bool disposing)
+	{
+		base.Dispose(disposing);
+		_renderer2d.Dispose();
 	}
 }

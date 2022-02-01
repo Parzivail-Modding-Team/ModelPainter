@@ -7,7 +7,7 @@ namespace ModelPainter.View;
 
 public class ControlContext<T> : IRenderContext where T : Control
 {
-	private readonly T _control;
+	protected readonly T _control;
 	private Vector2 _lastMousePos = Vector2.Zero;
 	private MouseButtons _mouseState = MouseButtons.None;
 
@@ -16,9 +16,6 @@ public class ControlContext<T> : IRenderContext where T : Control
 
 	/// <inheritdoc />
 	public int Height => _control.Height;
-
-	/// <inheritdoc />
-	public int DefaultFramebuffer => 0;
 
 	/// <inheritdoc />
 	public Vector2 MousePosition { get; private set; } = Vector2.Zero;

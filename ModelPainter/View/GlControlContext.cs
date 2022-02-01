@@ -4,7 +4,7 @@ namespace ModelPainter.View;
 
 public class GlControlContext : ControlContext<GLControl>
 {
-	public event EventHandler<EventArgs> RenderFrame;
+	public Action RenderFrame;
 
 	/// <inheritdoc />
 	public GlControlContext(GLControl control) : base(control)
@@ -15,8 +15,13 @@ public class GlControlContext : ControlContext<GLControl>
 				return;
 
 			gl.MakeCurrent();
-			RenderFrame?.Invoke(sender, EventArgs.Empty);
+			RenderFrame?.Invoke();
 			gl.SwapBuffers();
 		};
+	}
+
+	public void MakeCurrent()
+	{
+		_control.MakeCurrent();
 	}
 }

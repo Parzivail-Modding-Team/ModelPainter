@@ -57,8 +57,9 @@ public class ModelRenderer
 
 		_renderContext.MouseMove += OnMouseMove;
 		_renderContext.MouseWheel += OnMouseWheel;
-		_renderContext.RenderFrame += Render;
+		_renderContext.RenderFrame = Render;
 
+		renderContext.MakeCurrent();
 		GL.Enable(EnableCap.DebugOutput);
 		GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
 	}
@@ -110,7 +111,7 @@ public class ModelRenderer
 
 	public Guid GetObjectIdAt(int x, int y)
 	{
-		if (x < 0 || x >= _selectionFbo.Width || y < 0 || y >= _selectionFbo.Height)
+		if (_selectionFbo == null || x < 0 || x >= _selectionFbo.Width || y < 0 || y >= _selectionFbo.Height)
 			return Guid.Empty;
 
 		y = _selectionFbo.Height - 1 - y;
@@ -126,7 +127,7 @@ public class ModelRenderer
 
 	public Vector2 GetObjectUvAt(int x, int y)
 	{
-		if (x < 0 || x >= _uvFbo.Width || y < 0 || y >= _uvFbo.Height)
+		if (_uvFbo == null || x < 0 || x >= _uvFbo.Width || y < 0 || y >= _uvFbo.Height)
 			return Vector2.Zero;
 
 		var data = _uvBuffer.GetData();
@@ -139,7 +140,7 @@ public class ModelRenderer
 		return new Vector2(r, g);
 	}
 
-	private void Render(object sender, EventArgs e)
+	private void Render()
 	{
 		if (_renderContext.Width != 0 && _renderContext.Height != 0)
 			Render(false);
@@ -196,7 +197,7 @@ public class ModelRenderer
 
 		GL.Viewport(0, 0, width, height);
 
-		GL.ClearColor(Color.FromArgb(0x404040));
+		GL.ClearColor(Color4.Black);
 		GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 		var view = Matrix4.CreateRotationY((float)(-_rotation.Y / 180 * Math.PI))
@@ -216,6 +217,7 @@ public class ModelRenderer
 		GL.Enable(EnableCap.DepthTest);
 
 		_viewFbo.Use();
+		GL.ClearColor(Color.FromArgb(0x404040));
 		GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 		// 3D Viewport
@@ -242,6 +244,7 @@ public class ModelRenderer
 			_shaderModel.Release();
 
 			_selectionFbo.Use();
+			GL.ClearColor(Color.Black);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			_shaderModel.Uniforms.SetValue("objectIdMode", useAlphaTestSelectMode ? ObjectIdModeAlphaTest : ObjectIdModeCubeTest);
@@ -253,6 +256,7 @@ public class ModelRenderer
 			_selectionFbo.Release();
 
 			_uvFbo.Use();
+			GL.ClearColor(Color.Black);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			_shaderModel.Uniforms.SetValue("objectIdMode", ObjectIdModeTexCoord);
