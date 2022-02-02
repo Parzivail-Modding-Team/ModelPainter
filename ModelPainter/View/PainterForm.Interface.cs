@@ -154,43 +154,50 @@ public partial class PainterForm : Form
 
 	private void Open(string filename)
 	{
-		switch (Path.GetExtension(filename))
+		try
 		{
-			case ".png":
+			switch (Path.GetExtension(filename))
 			{
-				_imageWatcher.Watch(filename);
-				break;
+				case ".png":
+				{
+					_imageWatcher.Watch(filename);
+					break;
+				}
+				case ".nem":
+				{
+					var nem = NbtEntityModel.Load(filename);
+					LoadModelParts(nem.Parts);
+					break;
+				}
+				case ".dcm":
+				{
+					var dcm = StudioModel.Load(filename);
+					LoadStudioModel(dcm);
+					break;
+				}
+				case ".p3d":
+				{
+					var p3d = P3dModel.Load(filename);
+					LoadP3dModel(p3d);
+					break;
+				}
+				case ".tbl":
+				{
+					var tbl = TabulaModel.Load(filename);
+					LoadTabulaModel(tbl);
+					break;
+				}
+				case ".obj":
+				{
+					var obj = ObjModel.Load(filename);
+					LoadObjModel(obj);
+					break;
+				}
 			}
-			case ".nem":
-			{
-				var nem = NbtEntityModel.Load(filename);
-				LoadModelParts(nem.Parts);
-				break;
-			}
-			case ".dcm":
-			{
-				var dcm = StudioModel.Load(filename);
-				LoadStudioModel(dcm);
-				break;
-			}
-			case ".p3d":
-			{
-				var p3d = P3dModel.Load(filename);
-				LoadP3dModel(p3d);
-				break;
-			}
-			case ".tbl":
-			{
-				var tbl = TabulaModel.Load(filename);
-				LoadTabulaModel(tbl);
-				break;
-			}
-			case ".obj":
-			{
-				var obj = ObjModel.Load(filename);
-				LoadObjModel(obj);
-				break;
-			}
+		}
+		catch (Exception e)
+		{
+			MessageBox.Show(this, e.ToString(), "Error while opening file", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
 	}
 }

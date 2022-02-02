@@ -48,6 +48,9 @@ public record P3dModel(List<P3dModel.Socket> Sockets, List<P3dModel.Mesh> Meshes
 
 		var version = br.ReadInt32();
 
+		if (version != 2)
+			throw new NotSupportedException("Only P3D version 2 models are supported");
+
 		var numSockets = br.ReadInt32();
 
 		var sockets = new List<Socket>();

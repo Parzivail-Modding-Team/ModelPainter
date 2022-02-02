@@ -73,7 +73,7 @@ public record StudioModel(string Author, int TextureWidth, int TextureHeight, Li
 		var version = (int)br.ReadSingle();
 
 		if (version != 2)
-			throw new NotSupportedException();
+			throw new NotSupportedException("Only Studio version 2 models are supported");
 
 		var author = br.ReadUtf();
 		var texWidth = (int)br.ReadSingle();
