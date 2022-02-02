@@ -1,5 +1,6 @@
 ﻿using ModelPainter.Model.DCM;
 using ModelPainter.Model.P3D;
+using ModelPainter.Model.TBL;
 using ModelPainter.Render;
 using OpenTK;
 
@@ -19,6 +20,11 @@ public class ModelBakery
 			part.Render(matrices, vertices, dialation, objectIdMap, ref startingId);
 
 		return (PackVboData(vertices), objectIdMap);
+	}
+
+	public static (VboData ModelData, Dictionary<uint, Guid> IdMap) BakeTabula(TabulaModel tbl, float dialation = 0)
+	{
+		return BakeModelParts(tbl.GetModelParts(dialation), dialation);
 	}
 
 	public static (VboData ModelData, Dictionary<uint, Guid> IdMap) BakeStudioModel(StudioModel model, float dialation = 0)

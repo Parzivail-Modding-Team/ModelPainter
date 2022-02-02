@@ -2,6 +2,7 @@
 using ModelPainter.Model.DCM;
 using ModelPainter.Model.NEM;
 using ModelPainter.Model.P3D;
+using ModelPainter.Model.TBL;
 using ModelPainter.Util;
 using OpenTK;
 using OpenTK.Graphics;
@@ -175,6 +176,12 @@ public partial class PainterForm : Form
 			{
 				var p3d = P3dModel.Load(filename);
 				LoadP3dModel(p3d);
+				break;
+			}
+			case ".tbl":
+			{
+				var tbl = TabulaModel.Load(filename);
+				LoadTabulaModel(tbl);
 				break;
 			}
 		}

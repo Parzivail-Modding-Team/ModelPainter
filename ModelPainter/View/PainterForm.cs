@@ -1,6 +1,7 @@
 ﻿using ModelPainter.Model;
 using ModelPainter.Model.DCM;
 using ModelPainter.Model.P3D;
+using ModelPainter.Model.TBL;
 using ModelPainter.Render;
 using OpenTK;
 using SkiaSharp.Views.Desktop;
@@ -64,6 +65,15 @@ public partial class PainterForm
 		_renderer3d.UploadModelQuads(modelData, idMap);
 
 		(modelData, _) = ModelBakery.BakeModelParts(parts);
+		_renderer2d.SetVboData(modelData);
+	}
+
+	private void LoadTabulaModel(TabulaModel tbl)
+	{
+		var (modelData, idMap) = ModelBakery.BakeTabula(tbl, 0.04f);
+		_renderer3d.UploadModelQuads(modelData, idMap);
+
+		(modelData, _) = ModelBakery.BakeTabula(tbl);
 		_renderer2d.SetVboData(modelData);
 	}
 
