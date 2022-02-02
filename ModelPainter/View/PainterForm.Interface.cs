@@ -1,6 +1,7 @@
 ﻿using ModelPainter.Controls;
 using ModelPainter.Model.DCM;
 using ModelPainter.Model.NEM;
+using ModelPainter.Model.OBJ;
 using ModelPainter.Model.P3D;
 using ModelPainter.Model.TBL;
 using ModelPainter.Util;
@@ -118,7 +119,7 @@ public partial class PainterForm : Form
 		{
 			using var ofd = new OpenFileDialog
 			{
-				Filter = "Models and Textures|*.p3d;*.dcm;*.nem;*.tbl;*.png"
+				Filter = "Models and Textures|*.p3d;*.dcm;*.nem;*.tbl;*.obj;*.png"
 			};
 
 			if (ofd.ShowDialog() != DialogResult.OK)
@@ -182,6 +183,12 @@ public partial class PainterForm : Form
 			{
 				var tbl = TabulaModel.Load(filename);
 				LoadTabulaModel(tbl);
+				break;
+			}
+			case ".obj":
+			{
+				var obj = ObjModel.Load(filename);
+				LoadObjModel(obj);
 				break;
 			}
 		}

@@ -1,7 +1,9 @@
 ﻿using ModelPainter.Model.DCM;
+using ModelPainter.Model.OBJ;
 using ModelPainter.Model.P3D;
 using ModelPainter.Model.TBL;
 using ModelPainter.Render;
+using ModelPainter.Util;
 using OpenTK;
 
 namespace ModelPainter.Model;
@@ -57,6 +59,39 @@ public class ModelBakery
 
 		foreach (var part in model.Meshes)
 			part.Render(matrices, vertices, objectIdMap, ref startingId);
+
+		return (PackVboData(vertices), objectIdMap);
+	}
+
+	public static (VboData ModelData, Dictionary<uint, Guid> IdMap) BakeObjModel(ObjModel model)
+	{
+		var objectIdMap = new Dictionary<uint, Guid>();
+		var startingId = 1u;
+
+		var vertices = new List<VboVertex>();
+		var matrices = new MatrixStack();
+
+		matrices.Scale(1, -1, 1);
+		matrices.Translate(0, -1.5F, 0);
+
+		var entry = matrices.Peek();
+		foreach (var part in model.ObjFile.Faces)
+		{
+			var verts = part.Vertices;
+			if (verts.Count is < 3 or > 4)
+				continue;
+
+			for (var i = 0; i < verts.Count; i++)
+			{
+				var v = model.ObjFile.Vertices[verts[i].Vertex - 1];
+				var n = model.ObjFile.VertexNormals[verts[i].Normal - 1];
+				var t = model.ObjFile.TextureVertices[verts[i].Texture - 1];
+				vertices.Add(ModelUtil.Bake(entry, new Vector3(v.Position.X, v.Position.Y, v.Position.Z), new Vector2(t.X, t.Y), new Vector3(n.X, n.Y, n.Z), startingId));
+			}
+
+			if (verts.Count == 3)
+				vertices.Add(vertices[^1]);
+		}
 
 		return (PackVboData(vertices), objectIdMap);
 	}

@@ -1,5 +1,6 @@
 ﻿using ModelPainter.Model;
 using ModelPainter.Model.DCM;
+using ModelPainter.Model.OBJ;
 using ModelPainter.Model.P3D;
 using ModelPainter.Model.TBL;
 using ModelPainter.Render;
@@ -47,6 +48,8 @@ public partial class PainterForm
 				try
 				{
 					using var bmp = new Bitmap(stream);
+					bmp.SetResolution(96, 96);
+
 					_renderer3d.SetTexture(bmp);
 					_renderer2d.SetTexture(bmp.ToSKBitmap(), null);
 				}
@@ -89,6 +92,13 @@ public partial class PainterForm
 	private void LoadP3dModel(P3dModel p3d)
 	{
 		var (modelData, idMap) = ModelBakery.BakeP3dModel(p3d);
+		_renderer3d.UploadModelQuads(modelData, idMap);
+		_renderer2d.SetVboData(modelData);
+	}
+
+	private void LoadObjModel(ObjModel obj)
+	{
+		var (modelData, idMap) = ModelBakery.BakeObjModel(obj);
 		_renderer3d.UploadModelQuads(modelData, idMap);
 		_renderer2d.SetVboData(modelData);
 	}

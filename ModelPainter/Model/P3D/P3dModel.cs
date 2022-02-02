@@ -20,10 +20,10 @@ public record P3dModel(List<P3dModel.Socket> Sockets, List<P3dModel.Mesh> Meshes
 			var mat = matrices.Peek();
 			foreach (var face in Faces)
 			{
-				vertices.Add(Bake(mat, face.V1, face.T1, face.Normal, objectId));
-				vertices.Add(Bake(mat, face.V2, face.T2, face.Normal, objectId));
-				vertices.Add(Bake(mat, face.V3, face.T3, face.Normal, objectId));
-				vertices.Add(Bake(mat, face.V4, face.T4, face.Normal, objectId));
+				vertices.Add(ModelUtil.Bake(mat, face.V1, face.T1, face.Normal, objectId));
+				vertices.Add(ModelUtil.Bake(mat, face.V2, face.T2, face.Normal, objectId));
+				vertices.Add(ModelUtil.Bake(mat, face.V3, face.T3, face.Normal, objectId));
+				vertices.Add(ModelUtil.Bake(mat, face.V4, face.T4, face.Normal, objectId));
 			}
 
 			objectId++;
@@ -32,13 +32,6 @@ public record P3dModel(List<P3dModel.Socket> Sockets, List<P3dModel.Mesh> Meshes
 				child.Render(matrices, vertices, objectIdMap, ref objectId);
 
 			matrices.Pop();
-		}
-
-		private static VboVertex Bake(MatrixStack.Entry mat, Vector3 v, Vector2 t, Vector3 n, uint o)
-		{
-			var pos4 = new Vector4(v, 1.0F);
-			pos4 *= mat.Model;
-			return (new VboVertex(pos4.Xyz, new Vector2(t.X, 1 - t.Y), n * mat.Normal, o));
 		}
 	}
 
