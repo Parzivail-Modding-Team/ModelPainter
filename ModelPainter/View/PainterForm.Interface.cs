@@ -117,7 +117,7 @@ public partial class PainterForm : Form
 		{
 			using var ofd = new OpenFileDialog
 			{
-				Filter = "Models and Textures|*.obj;*.p3d;*.dcm;*.nem;*.tbl;*.json;*.png"
+				Filter = "Models and Textures|*.p3d;*.dcm;*.nem;*.tbl;*.png"
 			};
 
 			if (ofd.ShowDialog() != DialogResult.OK)
