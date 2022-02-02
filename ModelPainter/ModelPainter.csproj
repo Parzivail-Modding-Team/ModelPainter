@@ -26,17 +26,11 @@
         <None Remove="Resources\model.frag"/>
         <EmbeddedResource Include="Resources\model.frag"/>
         <None Remove="Resources\model.vert"/>
-        <EmbeddedResource Include="Resources\model.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </EmbeddedResource>
+        <EmbeddedResource Include="Resources\model.vert"/>
         <None Remove="Resources\screen.frag"/>
-        <EmbeddedResource Include="Resources\screen.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </EmbeddedResource>
+        <EmbeddedResource Include="Resources\screen.frag"/>
         <None Remove="Resources\screen.vert"/>
-        <EmbeddedResource Include="Resources\screen.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </EmbeddedResource>
+        <EmbeddedResource Include="Resources\screen.vert"/>
     </ItemGroup>
 
 </Project>
