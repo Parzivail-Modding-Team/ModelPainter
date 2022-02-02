@@ -1,5 +1,7 @@
 ﻿using ModelPainter.Controls;
+using ModelPainter.Model.DCM;
 using ModelPainter.Model.NEM;
+using ModelPainter.Model.P3D;
 using ModelPainter.Util;
 using OpenTK;
 using OpenTK.Graphics;
@@ -115,7 +117,7 @@ public partial class PainterForm : Form
 		{
 			using var ofd = new OpenFileDialog
 			{
-				Filter = "Models and Textures|*.obj;*.dcm;*.nem;*.tbl;*.json;*.png"
+				Filter = "Models and Textures|*.obj;*.p3d;*.dcm;*.nem;*.tbl;*.json;*.png"
 			};
 
 			if (ofd.ShowDialog() != DialogResult.OK)
@@ -161,6 +163,18 @@ public partial class PainterForm : Form
 			{
 				var nem = NbtEntityModel.Load(filename);
 				LoadModelParts(nem.Parts);
+				break;
+			}
+			case ".dcm":
+			{
+				var dcm = StudioModel.Load(filename);
+				LoadStudioModel(dcm);
+				break;
+			}
+			case ".p3d":
+			{
+				var p3d = P3dModel.Load(filename);
+				LoadP3dModel(p3d);
 				break;
 			}
 		}

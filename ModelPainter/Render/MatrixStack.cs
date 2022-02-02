@@ -1,5 +1,4 @@
-﻿using ModelPainter.Extensions;
-using OpenTK;
+﻿using OpenTK;
 
 namespace ModelPainter.Render
 {
@@ -31,6 +30,13 @@ namespace ModelPainter.Render
 			entry.Model = Matrix4.CreateTranslation((float)x, (float)y, (float)z) * entry.Model;
 		}
 
+		public void Multiply(Matrix4 m)
+		{
+			var entry = Peek();
+			entry.Model = m * entry.Model;
+			entry.Normal = new Matrix3(m) * entry.Normal;
+		}
+
 		public void RotateX(float amount)
 		{
 			var entry = Peek();
@@ -59,21 +65,7 @@ namespace ModelPainter.Render
 		{
 			var entry = Peek();
 			entry.Model = Matrix4.CreateScale(x, y, z) * entry.Model;
-			if (x == y && y == z)
-			{
-				if (x > 0.0F)
-				{
-					return;
-				}
-
-				entry.Normal.MultScalar(-1);
-			}
-
-			var f = 1.0F / x;
-			var g = 1.0F / y;
-			var h = 1.0F / z;
-			var i = 1 / Math.Cbrt(f * g * h);
-			entry.Normal = Matrix3.CreateScale((float)(i * f), (float)(i * g), (float)(i * h)) * entry.Normal;
+			entry.Normal = Matrix3.CreateScale(x, y, z) * entry.Normal;
 		}
 
 		public void Push()
@@ -86,7 +78,6 @@ namespace ModelPainter.Render
 		{
 			_stack.Pop();
 		}
-
 
 		public Entry Peek()
 		{

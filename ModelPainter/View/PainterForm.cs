@@ -1,4 +1,6 @@
 ﻿using ModelPainter.Model;
+using ModelPainter.Model.DCM;
+using ModelPainter.Model.P3D;
 using ModelPainter.Render;
 using OpenTK;
 using SkiaSharp.Views.Desktop;
@@ -62,6 +64,22 @@ public partial class PainterForm
 		_renderer3d.UploadModelQuads(modelData, idMap);
 
 		(modelData, _) = ModelBakery.BakeModelParts(parts);
+		_renderer2d.SetVboData(modelData);
+	}
+
+	private void LoadStudioModel(StudioModel dcm)
+	{
+		var (modelData, idMap) = ModelBakery.BakeStudioModel(dcm, 0.04f);
+		_renderer3d.UploadModelQuads(modelData, idMap);
+
+		(modelData, _) = ModelBakery.BakeStudioModel(dcm);
+		_renderer2d.SetVboData(modelData);
+	}
+
+	private void LoadP3dModel(P3dModel p3d)
+	{
+		var (modelData, idMap) = ModelBakery.BakeP3dModel(p3d);
+		_renderer3d.UploadModelQuads(modelData, idMap);
 		_renderer2d.SetVboData(modelData);
 	}
 
