@@ -4,6 +4,7 @@ using ModelPainter.Model.NEM;
 using ModelPainter.Model.OBJ;
 using ModelPainter.Model.P3D;
 using ModelPainter.Model.TBL;
+using ModelPainter.Model.TCN;
 using ModelPainter.Util;
 using OpenTK;
 using OpenTK.Graphics;
@@ -121,7 +122,7 @@ public partial class PainterForm : Form
 		{
 			using var ofd = new OpenFileDialog
 			{
-				Filter = "Models and Textures|*.p3d;*.dcm;*.nem;*.tbl;*.obj;*.png",
+				Filter = "Models and Textures|*.p3d;*.dcm;*.nem;*.tbl;*.tcn;*.obj;*.png",
 				Multiselect = true
 			};
 
@@ -189,6 +190,12 @@ public partial class PainterForm : Form
 				{
 					var tbl = TabulaModel.Load(filename);
 					LoadTabulaModel(tbl);
+					break;
+				}
+				case ".tcn":
+				{
+					var tcn = TechneModel.Load(filename);
+					LoadTechneModel(tcn);
 					break;
 				}
 				case ".obj":

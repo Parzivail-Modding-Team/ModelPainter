@@ -3,6 +3,7 @@ using ModelPainter.Model.DCM;
 using ModelPainter.Model.OBJ;
 using ModelPainter.Model.P3D;
 using ModelPainter.Model.TBL;
+using ModelPainter.Model.TCN;
 using ModelPainter.Render;
 using OpenTK;
 using SkiaSharp.Views.Desktop;
@@ -77,6 +78,15 @@ public partial class PainterForm
 		_renderer3d.UploadModelQuads(modelData, idMap);
 
 		(modelData, _) = ModelBakery.BakeTabula(tbl);
+		_renderer2d.SetVboData(modelData);
+	}
+
+	private void LoadTechneModel(TechneModel tcn)
+	{
+		var (modelData, idMap) = ModelBakery.BakeTechne(tcn, 0.04f);
+		_renderer3d.UploadModelQuads(modelData, idMap);
+
+		(modelData, _) = ModelBakery.BakeTechne(tcn);
 		_renderer2d.SetVboData(modelData);
 	}
 

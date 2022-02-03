@@ -2,6 +2,7 @@
 using ModelPainter.Model.OBJ;
 using ModelPainter.Model.P3D;
 using ModelPainter.Model.TBL;
+using ModelPainter.Model.TCN;
 using ModelPainter.Render;
 using ModelPainter.Util;
 using OpenTK;
@@ -30,6 +31,11 @@ public class ModelBakery
 	public static (VboData ModelData, Dictionary<uint, Guid> IdMap) BakeTabula(TabulaModel tbl, float dialation = 0)
 	{
 		return BakeModelParts(tbl.GetModelParts(dialation), dialation);
+	}
+
+	public static (VboData ModelData, Dictionary<uint, Guid> IdMap) BakeTechne(TechneModel tcn, float dialation = 0)
+	{
+		return BakeModelParts(tcn.GetModelParts(dialation), dialation);
 	}
 
 	public static (VboData ModelData, Dictionary<uint, Guid> IdMap) BakeStudioModel(StudioModel model, float dialation = 0)

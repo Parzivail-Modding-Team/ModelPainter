@@ -6,6 +6,13 @@ namespace ModelPainter.Model.TBL;
 
 public class TabulaModel
 {
+	private class VersionTestFields
+	{
+		[JsonPropertyName("parts")] public List<object> Parts { get; set; }
+
+		[JsonPropertyName("cubes")] public List<object> Cubes { get; set; }
+	}
+
 	public class Part
 	{
 		[JsonPropertyName("notes")] public List<string> Notes { get; set; }
@@ -121,7 +128,29 @@ public class TabulaModel
 		using var modelStream = new StreamReader(modelEntry.Open());
 		var modelJson = modelStream.ReadToEnd();
 
-		return JsonSerializer.Deserialize<TabulaModel>(modelJson);
+		// Determine the model version -- if it has "parts", it's a modern one.
+		// If it has "cubes", it's an old one.
+		var versionTest = JsonSerializer.Deserialize<VersionTestFields>(modelJson);
+
+		if (versionTest.Parts != null)
+			return JsonSerializer.Deserialize<TabulaModel>(modelJson);
+
+		return Modernize(JsonSerializer.Deserialize<OldTabulaModel>(modelJson));
+	}
+
+	private static TabulaModel Modernize(OldTabulaModel oldModel)
+	{
+		var model = new TabulaModel
+		{
+			Parts = new List<Part>(),
+			TexWidth = oldModel.TextureWidth,
+			TexHeight = oldModel.TextureHeight
+		};
+
+		foreach (var cube in oldModel.Cubes)
+			model.Parts.Add(cube.ToPart(oldModel.TextureWidth, oldModel.TextureHeight));
+
+		return model;
 	}
 
 	public List<ModelPart> GetModelParts(float dialation)
