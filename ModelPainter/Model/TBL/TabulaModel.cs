@@ -1,7 +1,6 @@
 ﻿using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using OpenTK;
 
 namespace ModelPainter.Model.TBL;
 
@@ -136,9 +135,9 @@ public class TabulaModel
 		{
 			Mirror = part.Mirror,
 			Name = part.Name,
-			Pitch = (float)MathHelper.RadiansToDegrees(part.Pitch),
-			Yaw = (float)MathHelper.RadiansToDegrees(part.Yaw),
-			Roll = (float)MathHelper.RadiansToDegrees(part.Roll),
+			Pitch = (float)part.Pitch,
+			Yaw = (float)part.Yaw,
+			Roll = (float)part.Roll,
 			Visible = part.ShowModel,
 			PivotX = (float)part.RotationPointX,
 			PivotY = (float)part.RotationPointY,

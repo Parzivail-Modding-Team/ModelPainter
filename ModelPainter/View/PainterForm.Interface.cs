@@ -51,7 +51,8 @@ public partial class PainterForm : Form
 				{
 					(_modelControl = new GLControl(new GraphicsMode(new ColorFormat(8), 24, 8, 1))
 					{
-						Dock = DockStyle.Fill
+						Dock = DockStyle.Fill,
+						VSync = true
 					}),
 				}
 			},
@@ -61,7 +62,8 @@ public partial class PainterForm : Form
 				{
 					(_imageControl = new GLControl(new GraphicsMode(new ColorFormat(8), 24, 8, 1))
 					{
-						Dock = DockStyle.Fill
+						Dock = DockStyle.Fill,
+						VSync = true
 					})
 				}
 			}
@@ -119,13 +121,15 @@ public partial class PainterForm : Form
 		{
 			using var ofd = new OpenFileDialog
 			{
-				Filter = "Models and Textures|*.p3d;*.dcm;*.nem;*.tbl;*.obj;*.png"
+				Filter = "Models and Textures|*.p3d;*.dcm;*.nem;*.tbl;*.obj;*.png",
+				Multiselect = true
 			};
 
 			if (ofd.ShowDialog() != DialogResult.OK)
 				return;
 
-			Open(ofd.FileName);
+			foreach (var name in ofd.FileNames)
+				Open(name);
 		};
 
 		_bEditSettings.Click += (sender, args) =>

@@ -18,6 +18,9 @@ public class ModelBakery
 		var vertices = new List<VboVertex>();
 		var matrices = new MatrixStack();
 
+		matrices.RotateY(MathF.PI);
+		matrices.Scale(-1, 1, 1);
+
 		foreach (var part in modelParts)
 			part.Render(matrices, vertices, dialation, objectIdMap, ref startingId);
 
@@ -37,8 +40,8 @@ public class ModelBakery
 		var vertices = new List<VboVertex>();
 		var matrices = new MatrixStack();
 
-		matrices.Scale(1, -1, 1);
-		matrices.Translate(0, -1.5F, 0);
+		matrices.Translate(0, 1.5F, 0);
+		matrices.Scale(-1, -1, -1);
 
 		foreach (var part in model.Children)
 			part.Render(matrices, vertices, dialation, objectIdMap, ref startingId);
@@ -56,6 +59,7 @@ public class ModelBakery
 
 		matrices.Scale(1, -1, 1);
 		matrices.Translate(0, -1.5F, 0);
+		matrices.RotateY(MathF.PI);
 
 		foreach (var part in model.Meshes)
 			part.Render(matrices, vertices, objectIdMap, ref startingId);
