@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelPainter", "ModelPainte
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.IO.FileSystem.Watcher.Polling", "System.IO.FileSystem.Watcher.Polling\System.IO.FileSystem.Watcher.Polling.csproj", "{24CD302B-5B25-45EF-A9DD-03F801E7137C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cafebabe", "Cafebabe\Cafebabe.csproj", "{586A528F-3F10-43D2-872D-0DA5AB3D48C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{24CD302B-5B25-45EF-A9DD-03F801E7137C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24CD302B-5B25-45EF-A9DD-03F801E7137C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24CD302B-5B25-45EF-A9DD-03F801E7137C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{586A528F-3F10-43D2-872D-0DA5AB3D48C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{586A528F-3F10-43D2-872D-0DA5AB3D48C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{586A528F-3F10-43D2-872D-0DA5AB3D48C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{586A528F-3F10-43D2-872D-0DA5AB3D48C5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -19,6 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Cafebabe\Cafebabe.csproj"/>
         <ProjectReference Include="..\System.IO.FileSystem.Watcher.Polling\System.IO.FileSystem.Watcher.Polling.csproj"/>
     </ItemGroup>
 
