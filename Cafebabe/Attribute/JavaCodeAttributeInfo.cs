@@ -3,7 +3,8 @@ using Cafebabe.Class;
 
 namespace Cafebabe.Attribute;
 
-public record JavaCodeAttributeInfo(string Name, short MaxStack, short MaxLocals, byte[] Code, JavaExceptionTableEntry[] ExceptionTable, JavaAttributeInfo[] Attributes) : JavaAttributeInfo(Name)
+public record JavaCodeAttributeInfo
+	(string Name, short MaxStack, short MaxLocals, List<JvmInstruction> Instructions, JavaExceptionTableEntry[] ExceptionTable, JavaAttributeInfo[] Attributes) : JavaAttributeInfo(Name)
 {
 	public static JavaAttributeInfo Read(JavaConstantPool constantPool, string name, byte[] data)
 	{
@@ -15,7 +16,6 @@ public record JavaCodeAttributeInfo(string Name, short MaxStack, short MaxLocals
 		var codeLength = br.ReadInt32();
 		var code = br.ReadBytes(codeLength);
 
-		// TODO:
 		var instructions = JvmBytecodeParser.ParseInstructions(constantPool, code);
 
 		var exceptionTableLength = br.ReadInt16();
@@ -35,6 +35,6 @@ public record JavaCodeAttributeInfo(string Name, short MaxStack, short MaxLocals
 		for (var i = 0; i < attributes.Length; i++)
 			attributes[i] = JavaPooledAttributeInfo.Read(br).Bake(constantPool);
 
-		return new JavaCodeAttributeInfo(name, maxStack, maxLocals, code, exceptionTable, attributes);
+		return new JavaCodeAttributeInfo(name, maxStack, maxLocals, instructions, exceptionTable, attributes);
 	}
 }
