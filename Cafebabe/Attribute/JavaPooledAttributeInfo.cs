@@ -31,7 +31,7 @@ public record JavaPooledAttributeInfo(short NamePoolIdx, byte[] Data)
 		if (Bakery.TryGetValue(name, out var baker))
 			return baker.Invoke(constantPool, name, Data);
 
-		Console.WriteLine($"No baker for \"{name}\" attribute");
+		Console.WriteLine($"No baker for attribute \"{name}\"");
 		return new JavaAttributeInfo(name);
 	}
 }

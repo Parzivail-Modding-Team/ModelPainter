@@ -1,4 +1,6 @@
-﻿namespace ModelPainter.View;
+﻿using ModelPainter.Resources;
+
+namespace ModelPainter.View;
 
 public class SettingsForm : Form
 {
@@ -12,6 +14,7 @@ public class SettingsForm : Form
 		AutoScaleMode = AutoScaleMode.Font;
 		ClientSize = new Size(530, 500);
 		Text = "ModelPainter";
+		Icon = new Icon(ResourceHelper.GetLocalResource("icon.ico"));
 
 		PropertyGrid pgSettings;
 

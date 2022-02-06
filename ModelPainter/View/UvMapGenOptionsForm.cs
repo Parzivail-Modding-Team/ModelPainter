@@ -1,4 +1,5 @@
-﻿using ModelPainter.Util;
+﻿using ModelPainter.Resources;
+using ModelPainter.Util;
 
 namespace ModelPainter.View;
 
@@ -11,6 +12,7 @@ public class UvMapGenOptionsForm : Form
 		AutoScaleMode = AutoScaleMode.Font;
 		ClientSize = new Size(530, 500);
 		Text = "ModelPainter";
+		Icon = new Icon(ResourceHelper.GetLocalResource("icon.ico"));
 
 		PropertyGrid pgSettings;
 

@@ -5,6 +5,7 @@ using ModelPainter.Model.OBJ;
 using ModelPainter.Model.P3D;
 using ModelPainter.Model.TBL;
 using ModelPainter.Model.TCN;
+using ModelPainter.Resources;
 using ModelPainter.Util;
 using OpenTK;
 using OpenTK.Graphics;
@@ -42,6 +43,7 @@ public partial class PainterForm : Form
 		AutoScaleMode = AutoScaleMode.Font;
 		ClientSize = new Size(800, 450);
 		Text = "ModelPainter";
+		Icon = new Icon(ResourceHelper.GetLocalResource("icon.ico"));
 
 		_settings = ModelPainterSettings.Load(SETTINGS_FILENAME);
 

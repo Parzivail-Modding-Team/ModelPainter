@@ -4,7 +4,8 @@ using Cafebabe.Class;
 namespace Cafebabe.Attribute;
 
 public record JavaCodeAttributeInfo
-	(string Name, short MaxStack, short MaxLocals, List<JvmInstruction> Instructions, JavaExceptionTableEntry[] ExceptionTable, JavaAttributeInfo[] Attributes) : JavaAttributeInfo(Name)
+(string Name, short MaxStack, short MaxLocals, SortedDictionary<short, JvmInstruction> Instructions, JavaExceptionTableEntry[] ExceptionTable,
+	JavaAttributeInfo[] Attributes) : JavaAttributeInfo(Name)
 {
 	public static JavaAttributeInfo Read(JavaConstantPool constantPool, string name, byte[] data)
 	{

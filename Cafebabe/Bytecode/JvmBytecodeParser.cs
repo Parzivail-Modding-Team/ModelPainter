@@ -175,20 +175,23 @@ public static class JvmBytecodeParser
 		return new JvmInstruction(opcode);
 	}
 
-	public static List<JvmInstruction> ParseInstructions(JavaConstantPool constantPool, byte[] code)
+	public static SortedDictionary<short, JvmInstruction> ParseInstructions(JavaConstantPool constantPool, byte[] code)
 	{
 		using var br = new EndiannessAwareBinaryReader(new MemoryStream(code), EndiannessAwareBinaryReader.Endianness.Big);
 
-		var instructions = new List<JvmInstruction>();
+		var instructions = new SortedDictionary<short, JvmInstruction>();
 
 		while (br.BaseStream.Position < code.Length)
 		{
+			if (br.BaseStream.Position > short.MaxValue)
+				throw new InvalidOperationException($"No opcodes can exist past {short.MaxValue}");
+
 			var opcode = (JvmOpcode)br.ReadByte();
 			if (Bakery.TryGetValue(opcode, out var baker))
-				instructions.Add(baker.Invoke(constantPool, opcode, br));
+				instructions[(short)br.BaseStream.Position] = baker.Invoke(constantPool, opcode, br);
 			else
 			{
-				throw new NotSupportedException($"No baker for opcode {opcode}");
+				throw new NotSupportedException($"No baker for opcode \"{opcode}\"");
 			}
 		}
 
