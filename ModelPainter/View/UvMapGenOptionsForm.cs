@@ -1,12 +1,11 @@
-﻿namespace ModelPainter.View;
+﻿using ModelPainter.Util;
 
-public class SettingsForm : Form
+namespace ModelPainter.View;
+
+public class UvMapGenOptionsForm : Form
 {
-	public string Filename { get; }
-
-	public SettingsForm(string filename)
+	public UvMapGenOptionsForm(UvMapGenOptions genOptions)
 	{
-		Filename = filename;
 		SuspendLayout();
 
 		AutoScaleMode = AutoScaleMode.Font;
@@ -18,10 +17,10 @@ public class SettingsForm : Form
 		Controls.Add(pgSettings = new PropertyGrid
 		{
 			Dock = DockStyle.Fill,
-			SelectedObject = ModelPainterSettings.Load(filename)
+			SelectedObject = genOptions
 		});
 
-		Button bSave;
+		Button bOk;
 		Button bCancel;
 
 		Controls.Add(new FlowLayoutPanel
@@ -31,9 +30,9 @@ public class SettingsForm : Form
 			AutoSize = true,
 			Controls =
 			{
-				(bSave = new Button
+				(bOk = new Button
 				{
-					Text = "Save",
+					Text = "OK",
 					DialogResult = DialogResult.OK
 				}),
 				(bCancel = new Button
@@ -44,16 +43,7 @@ public class SettingsForm : Form
 			}
 		});
 
-		bSave.Click += (sender, args) =>
-		{
-			if (pgSettings.SelectedObject is not ModelPainterSettings po)
-				return;
-
-			po.Save(filename);
-
-			Close();
-		};
-
+		bOk.Click += (sender, args) => Close();
 		bCancel.Click += (sender, args) => Close();
 
 		ResumeLayout(true);

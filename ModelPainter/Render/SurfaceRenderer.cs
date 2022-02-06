@@ -108,7 +108,7 @@ public class SurfaceRenderer : IDisposable
 		_renderContext.MarkDirty();
 	}
 
-	public void SetPreviewedUv(Vector2? uv)
+	public void SetPointedUv(Vector2? uv)
 	{
 		_previewedUv = uv;
 
@@ -285,5 +285,17 @@ public class SurfaceRenderer : IDisposable
 	{
 		_invertColors = invert;
 		_renderContext.MarkDirty();
+	}
+
+	public Vector2? GetSurfaceUvAt(int controlX, int controlY)
+	{
+		if (_textureWidth == 0 || _textureHeight == 0)
+			return null;
+
+		var localPos = ContentTransformation.Invert().MapPoint(new SKPoint(controlX, controlY));
+		if (localPos.X < 0 || localPos.Y < 0 || localPos.X >= _textureWidth || localPos.Y >= _textureHeight)
+			return null;
+
+		return new Vector2(localPos.X / _textureWidth, localPos.Y / _textureHeight);
 	}
 }

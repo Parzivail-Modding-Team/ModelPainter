@@ -1,7 +1,9 @@
 ﻿#version 330 core
 
 uniform vec3 lightPos;
+uniform vec4 selectColor;
 uniform sampler2D texModel;
+uniform sampler2D texOverlay;
 uniform int objectIdMode;
 uniform uint selectedCuboidId;
 
@@ -27,8 +29,9 @@ void main()
     }
 
     vec4 samp = texture(texModel, fragTexCoord);
+    vec4 overlaySamp = texture(texOverlay, fragTexCoord);
 
-    if (samp.a < 1)
+    if (samp.a < 1 && overlaySamp.r < 1)
     {
         discard;
     }
@@ -49,6 +52,7 @@ void main()
         uint objectId = uint(fragObjectId.b * 16581375 + fragObjectId.g * 65025 + fragObjectId.r * 255);
 
         samp = vec4(samp.rgb * clamp(ambient + diffuse, 0, 1), 1.0);
+        samp = mix(samp, vec4(selectColor.rgb, 1.0), overlaySamp.r * selectColor.a);
 
         if (objectId == selectedCuboidId)
         {

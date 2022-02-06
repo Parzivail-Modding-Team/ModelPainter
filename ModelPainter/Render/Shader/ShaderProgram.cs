@@ -84,6 +84,11 @@ namespace ModelPainter.Render.Shader
 					var vec3 = (Vector3)val;
 					GL.Uniform3(loc, vec3.X, vec3.Y, vec3.Z);
 				}
+				else if (type == typeof(Vector4))
+				{
+					var vec4 = (Vector4)val;
+					GL.Uniform4(loc, vec4.X, vec4.Y, vec4.Z, vec4.W);
+				}
 				else if (type == typeof(Matrix4))
 				{
 					var mat4 = (Matrix4)val;

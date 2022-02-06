@@ -22,6 +22,8 @@ public partial class PainterForm : Form
 	private readonly ToolStripMenuItem _bReset3dViewport;
 	private readonly ToolStripMenuItem _bReset2dViewport;
 
+	private readonly ToolStripMenuItem _bGenerateUvMap;
+
 	private readonly MinimalSplitContainer _splitContainer;
 	private readonly GLControl _modelControl;
 	private readonly GLControl _imageControl;
@@ -96,6 +98,14 @@ public partial class PainterForm : Form
 				},
 				new ToolStripDropDownButton
 				{
+					Text = "&Tools",
+					DropDownItems =
+					{
+						(_bGenerateUvMap = new ToolStripMenuItem("&Generate UV Map"))
+					}
+				},
+				new ToolStripDropDownButton
+				{
 					Text = "&View",
 					DropDownItems =
 					{
@@ -144,6 +154,8 @@ public partial class PainterForm : Form
 
 		_bReset3dViewport.Click += (sender, args) => _renderer3d.ResetView();
 		_bReset2dViewport.Click += (sender, args) => _renderer2d.ResetView();
+
+		_bGenerateUvMap.Click += (sender, args) => GenerateUvMap();
 
 		_splitContainer.SplitterDistance = _splitContainer.Width / 2;
 

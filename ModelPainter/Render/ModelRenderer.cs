@@ -36,14 +36,21 @@ public class ModelRenderer
 
 	private uint _selectedCuboidId;
 	private int _modelTexture = -1;
+	private int _modelOverlayTexture = -1;
+	private int _defaultTexture = -1;
 
 	private Camera _camera;
+
+	private Color _loadModelColor = Color.Empty;
+	private Color _loadSelectColor = Color.Empty;
+	private Color _backgroundColor;
 
 	private int _fovY = 4;
 	private int _zoom = 1;
 	private Vector2 _rotation = new(-35.264f, 45);
 	private Vector3 _translation = Vector3.Zero;
 
+	private Vector2? _loadPointedUv;
 	private int _loadBitmapWidth;
 	private int _loadBitmapHeight;
 	private byte[] _loadBitmap;
@@ -130,10 +137,10 @@ public class ModelRenderer
 		return _objectIdMap.TryGetValue(id, out var guid) ? guid : Guid.Empty;
 	}
 
-	public Vector2 GetObjectUvAt(int x, int y)
+	public Vector2? GetObjectUvAt(int x, int y)
 	{
 		if (_uvFbo == null || x < 0 || x >= _uvFbo.Width || y < 0 || y >= _uvFbo.Height)
-			return Vector2.Zero;
+			return null;
 
 		var data = _uvBuffer.GetData();
 
@@ -182,7 +189,22 @@ public class ModelRenderer
 
 			_shaderModel = new ShaderProgram(ResourceHelper.GetLocalStringResource("model.frag"), ResourceHelper.GetLocalStringResource("model.vert"));
 			_shaderModel.Uniforms.SetValue("texModel", 1);
+			_shaderModel.Uniforms.SetValue("texOverlay", 2);
 			_shaderModel.Uniforms.SetValue("lightPos", new Vector3(0.6f, -1, 0.8f));
+
+			_defaultTexture = GL.GenTexture();
+
+			GL.ActiveTexture(TextureUnit.Texture1);
+
+			GL.BindTexture(TextureTarget.Texture2D, _defaultTexture);
+			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, 1, 1, 0, PixelFormat.Bgra, PixelType.UnsignedByte, new byte[] { 0, 0, 0, 255 });
+
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+
+			GL.BindTexture(TextureTarget.Texture2D, 0);
 		}
 
 		if (width != _viewFbo.Width || height != _viewFbo.Height)
@@ -222,6 +244,57 @@ public class ModelRenderer
 			_loadBitmap = null;
 		}
 
+		if (_loadPointedUv != null)
+		{
+			var needsInit = _modelOverlayTexture == -1;
+
+			if (needsInit)
+				_modelOverlayTexture = GL.GenTexture();
+
+			GL.ActiveTexture(TextureUnit.Texture2);
+
+			GL.BindTexture(TextureTarget.Texture2D, _modelOverlayTexture);
+			var pixels = new byte[_loadBitmapWidth * _loadBitmapHeight];
+
+			var x = (int)(_loadPointedUv.Value.X * _loadBitmapWidth);
+			var y = (int)(_loadPointedUv.Value.Y * _loadBitmapHeight);
+
+			pixels[y * _loadBitmapWidth + x] = 255;
+
+			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.R8, _loadBitmapWidth, _loadBitmapHeight, 0, PixelFormat.Red, PixelType.UnsignedByte, pixels);
+
+			if (needsInit)
+			{
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+			}
+
+			GL.BindTexture(TextureTarget.Texture2D, 0);
+
+			_loadBitmap = null;
+		}
+
+		if (_loadModelColor != Color.Empty)
+		{
+			GL.ActiveTexture(TextureUnit.Texture1);
+
+			GL.BindTexture(TextureTarget.Texture2D, _defaultTexture);
+			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, 1, 1, 0, PixelFormat.Bgra, PixelType.UnsignedByte,
+				new[] { _loadModelColor.B, _loadModelColor.G, _loadModelColor.R, _loadModelColor.A });
+
+			GL.BindTexture(TextureTarget.Texture2D, 0);
+
+			_loadModelColor = Color.Empty;
+		}
+
+		if (_loadSelectColor != Color.Empty)
+		{
+			_shaderModel.Uniforms.SetValue("selectColor", new Vector4(_loadSelectColor.R / 255f, _loadSelectColor.G / 255f, _loadSelectColor.B / 255f, _loadSelectColor.A / 255f));
+			_loadSelectColor = Color.Empty;
+		}
+
 		var aspectRatio = width / (float)height;
 		var perspective = Matrix4.CreatePerspectiveFieldOfView(MathHelper.Pi * 1 / _fovY, aspectRatio, 1f, 65536);
 
@@ -249,7 +322,7 @@ public class ModelRenderer
 		// 3D Viewport
 		{
 			_viewFbo.Use();
-			GL.ClearColor(Color.FromArgb(0x404040));
+			GL.ClearColor(_backgroundColor);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			GL.PushMatrix();
@@ -266,7 +339,9 @@ public class ModelRenderer
 			GL.Color4(Color4.White);
 
 			GL.ActiveTexture(TextureUnit.Texture1);
-			GL.BindTexture(TextureTarget.Texture2D, _modelTexture);
+			GL.BindTexture(TextureTarget.Texture2D, _modelTexture == -1 ? _defaultTexture : _modelTexture);
+			GL.ActiveTexture(TextureUnit.Texture2);
+			GL.BindTexture(TextureTarget.Texture2D, _modelOverlayTexture);
 
 			_shaderModel.Uniforms.SetValue("objectIdMode", ObjectIdModeDisabled);
 			_shaderModel.Use();
@@ -439,6 +514,30 @@ public class ModelRenderer
 		var (v, n, t, id, e) = data;
 		_vbo.InitializeVbo(v, n, t, id, e);
 
+		_renderContext.MarkDirty();
+	}
+
+	public void SetBackgroundColor(Color color)
+	{
+		_backgroundColor = color;
+	}
+
+	public void SetModelColor(Color color)
+	{
+		_loadModelColor = color;
+	}
+
+	public void SetSelectedPixelColor(Color color)
+	{
+		_loadSelectColor = color;
+	}
+
+	public void SetPointedUv(Vector2? pixel)
+	{
+		if (_loadBitmapWidth == 0 || _loadBitmapHeight == 0 || pixel == null)
+			return;
+
+		_loadPointedUv = pixel;
 		_renderContext.MarkDirty();
 	}
 }
