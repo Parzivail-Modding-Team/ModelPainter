@@ -161,13 +161,35 @@ public static class JvmBytecodeParser
 		[JvmOpcode.bipush] = JvmBipushInstruction.Read,
 		[JvmOpcode.fload] = JvmIndexedInstruction.ReadNarrow,
 		[JvmOpcode.getfield] = JvmClassChildReferenceInstruction.Read,
+		[JvmOpcode.getstatic] = JvmClassChildReferenceInstruction.Read,
+		[JvmOpcode.if_acmpeq] = JvmBranchInstruction.Read,
+		[JvmOpcode.if_acmpne] = JvmBranchInstruction.Read,
+		[JvmOpcode.if_icmpeq] = JvmBranchInstruction.Read,
+		[JvmOpcode.if_icmpge] = JvmBranchInstruction.Read,
+		[JvmOpcode.if_icmpgt] = JvmBranchInstruction.Read,
+		[JvmOpcode.if_icmple] = JvmBranchInstruction.Read,
+		[JvmOpcode.if_icmplt] = JvmBranchInstruction.Read,
+		[JvmOpcode.if_icmpne] = JvmBranchInstruction.Read,
+		[JvmOpcode.ifeq] = JvmBranchInstruction.Read,
+		[JvmOpcode.ifge] = JvmBranchInstruction.Read,
+		[JvmOpcode.ifgt] = JvmBranchInstruction.Read,
+		[JvmOpcode.ifle] = JvmBranchInstruction.Read,
+		[JvmOpcode.iflt] = JvmBranchInstruction.Read,
+		[JvmOpcode.ifne] = JvmBranchInstruction.Read,
+		[JvmOpcode.ifnonnull] = JvmBranchInstruction.Read,
+		[JvmOpcode.ifnull] = JvmBranchInstruction.Read,
+		[JvmOpcode.instanceof] = JvmClassChildReferenceInstruction.Read,
+		[JvmOpcode.invokedynamic] = JvmClassChildReferenceCountInstruction.Read,
+		[JvmOpcode.invokeinterface] = JvmClassChildReferenceCountInstruction.Read,
 		[JvmOpcode.invokespecial] = JvmClassChildReferenceInstruction.Read,
+		[JvmOpcode.invokestatic] = JvmClassChildReferenceInstruction.Read,
 		[JvmOpcode.invokevirtual] = JvmClassChildReferenceInstruction.Read,
 		[JvmOpcode.ldc] = JvmLoadConstantInstruction.ReadNarrow,
 		[JvmOpcode.ldc_w] = JvmLoadConstantInstruction.ReadWide,
 		[JvmOpcode.ldc2_w] = JvmLoadConstantInstruction.ReadWide,
 		[JvmOpcode.new_obj] = JvmClassReferenceInstruction.Read,
-		[JvmOpcode.putfield] = JvmClassChildReferenceInstruction.Read
+		[JvmOpcode.putfield] = JvmClassChildReferenceInstruction.Read,
+		[JvmOpcode.putstatic] = JvmClassChildReferenceInstruction.Read
 	};
 
 	private static JvmInstruction DefaultBakery(JavaConstantPool constantpool, JvmOpcode opcode, BinaryReader r)
@@ -188,7 +210,7 @@ public static class JvmBytecodeParser
 
 			var opcode = (JvmOpcode)br.ReadByte();
 			if (Bakery.TryGetValue(opcode, out var baker))
-				instructions[(short)br.BaseStream.Position] = baker.Invoke(constantPool, opcode, br);
+				instructions[(short)(br.BaseStream.Position - 1)] = baker.Invoke(constantPool, opcode, br);
 			else
 			{
 				throw new NotSupportedException($"No baker for opcode \"{opcode}\"");
