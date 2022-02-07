@@ -4,7 +4,8 @@ using Cafebabe.Method;
 
 namespace Cafebabe.Class;
 
-public class JavaClassFile
+public record JavaClassFile(short MajorVersion, short MinorVersion, JavaClassAccessFlag AccessFlags, string ThisClass, string SuperClass, string[] Interfaces, JavaFieldInfo[] Fields,
+	JavaMethodInfo[] Methods, JavaAttributeInfo[] Attributes)
 {
 	private const uint ClassFileMagic = 0xCAFEBABE;
 
@@ -46,6 +47,6 @@ public class JavaClassFile
 		for (var i = 0; i < attributes.Length; i++)
 			attributes[i] = JavaAttributeInfo.Read(constantPool, br);
 
-		return null;
+		return new JavaClassFile(majorVersion, minorVersion, accessFlags, thisClass, superClass, interfaces, fields, methods, attributes);
 	}
 }

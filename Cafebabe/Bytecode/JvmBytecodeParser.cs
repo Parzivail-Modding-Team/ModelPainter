@@ -225,9 +225,6 @@ public static class JvmBytecodeParser
 
 		while (br.BaseStream.Position < code.Length)
 		{
-			if (br.BaseStream.Position > short.MaxValue)
-				throw new InvalidOperationException($"No opcodes can exist past {short.MaxValue}");
-
 			var opcode = (JvmOpcode)br.ReadByte();
 			if (Bakery.TryGetValue(opcode, out var baker))
 				instructions[(short)(br.BaseStream.Position - 1)] = baker.Invoke(constantPool, opcode, br);
