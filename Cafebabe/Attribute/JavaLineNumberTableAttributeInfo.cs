@@ -6,7 +6,7 @@ public record JavaLineNumberTableAttributeInfo(string Name, JavaLineNumberTableE
 {
 	public static JavaAttributeInfo Read(JavaConstantPool constantPool, string name, byte[] data)
 	{
-		using var br = new EndiannessAwareBinaryReader(new MemoryStream(data), EndiannessAwareBinaryReader.Endianness.Big);
+		using var br = Utils.CreateReader(data);
 
 		var tableLength = br.ReadInt16();
 		var table = new JavaLineNumberTableEntry[tableLength];

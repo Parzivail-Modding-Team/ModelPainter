@@ -6,10 +6,9 @@ public record JavaSourceFileAttributeInfo(string Name, string SourceFileName) : 
 {
 	public static JavaAttributeInfo Read(JavaConstantPool constantPool, string name, byte[] data)
 	{
-		using var br = new EndiannessAwareBinaryReader(new MemoryStream(data), EndiannessAwareBinaryReader.Endianness.Big);
+		using var br = Utils.CreateReader(data);
 
 		var sourceFileIndex = br.ReadInt16();
-
-		return new JavaSourceFileAttributeInfo(name, (string)constantPool.Constants[sourceFileIndex]);
+		return new JavaSourceFileAttributeInfo(name, constantPool.GetString(sourceFileIndex));
 	}
 }

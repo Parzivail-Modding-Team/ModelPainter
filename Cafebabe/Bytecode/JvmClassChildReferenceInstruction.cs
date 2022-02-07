@@ -7,7 +7,7 @@ public record JvmClassChildReferenceInstruction(JvmOpcode Opcode, JavaClassChild
 	public static JvmInstruction Read(JavaConstantPool constantpool, JvmOpcode opcode, BinaryReader r)
 	{
 		var referenceIndex = r.ReadInt16();
-		var reference = (JavaPooledClassChildReference)constantpool.Constants[referenceIndex];
+		var reference = constantpool.GetClassChildRef(referenceIndex);
 		return new JvmClassChildReferenceInstruction(opcode, reference.Bake(constantpool));
 	}
 }

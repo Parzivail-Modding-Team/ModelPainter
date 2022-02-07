@@ -12,7 +12,7 @@ public record JvmLoadConstantInstruction(JvmOpcode Opcode, object Constant) : Jv
 
 	public static JvmInstruction ReadWide(JavaConstantPool constantpool, JvmOpcode opcode, BinaryReader r)
 	{
-		var referenceIndex = r.ReadByte();
+		var referenceIndex = r.ReadInt16();
 		return new JvmLoadConstantInstruction(opcode, constantpool.Constants[referenceIndex]);
 	}
 }

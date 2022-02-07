@@ -23,31 +23,28 @@ public class JavaClassFile
 
 		var accessFlags = (JavaClassAccessFlag)br.ReadUInt16();
 
-		var thisClassPoolIdx = br.ReadInt16();
-		var thisClass = (string)constantPool.Constants[(short)constantPool.Constants[thisClassPoolIdx]];
-
-		var superClassPoolIdx = br.ReadInt16();
-		var superClass = (string)constantPool.Constants[(short)constantPool.Constants[superClassPoolIdx]];
+		var thisClass = constantPool.GetClassInfo(br.ReadInt16());
+		var superClass = constantPool.GetClassInfo(br.ReadInt16());
 
 		var numInterfaces = br.ReadInt16();
-		var interfaces = new short[numInterfaces];
+		var interfaces = new string[numInterfaces];
 		for (var i = 0; i < interfaces.Length; i++)
-			interfaces[i] = br.ReadInt16();
+			interfaces[i] = constantPool.GetClassInfo(br.ReadInt16());
 
 		var numFields = br.ReadInt16();
 		var fields = new JavaFieldInfo[numFields];
 		for (var i = 0; i < fields.Length; i++)
-			fields[i] = JavaPooledFieldInfo.Read(br).Bake(constantPool);
+			fields[i] = JavaFieldInfo.Read(constantPool, br);
 
 		var numMethods = br.ReadInt16();
 		var methods = new JavaMethodInfo[numMethods];
 		for (var i = 0; i < methods.Length; i++)
-			methods[i] = JavaPooledMethodInfo.Read(br).Bake(constantPool);
+			methods[i] = JavaMethodInfo.Read(constantPool, br);
 
 		var numAttributes = br.ReadInt16();
 		var attributes = new JavaAttributeInfo[numAttributes];
 		for (var i = 0; i < attributes.Length; i++)
-			attributes[i] = JavaPooledAttributeInfo.Read(br).Bake(constantPool);
+			attributes[i] = JavaAttributeInfo.Read(constantPool, br);
 
 		return null;
 	}

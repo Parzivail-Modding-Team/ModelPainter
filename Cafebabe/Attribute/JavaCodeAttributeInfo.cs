@@ -9,7 +9,7 @@ public record JavaCodeAttributeInfo
 {
 	public static JavaAttributeInfo Read(JavaConstantPool constantPool, string name, byte[] data)
 	{
-		using var br = new EndiannessAwareBinaryReader(new MemoryStream(data), EndiannessAwareBinaryReader.Endianness.Big);
+		using var br = Utils.CreateReader(data);
 
 		var maxStack = br.ReadInt16();
 		var maxLocals = br.ReadInt16();
@@ -27,14 +27,14 @@ public record JavaCodeAttributeInfo
 			var startPc = br.ReadInt16();
 			var endPc = br.ReadInt16();
 			var handlerPc = br.ReadInt16();
-			var catchType = br.ReadInt16();
-			exceptionTable[i] = new JavaExceptionTableEntry(startPc, endPc, handlerPc, (string)constantPool.Constants[catchType]);
+			var catchTypeIdx = br.ReadInt16();
+			exceptionTable[i] = new JavaExceptionTableEntry(startPc, endPc, handlerPc, constantPool.GetClassInfo(catchTypeIdx));
 		}
 
 		var numAttributes = br.ReadInt16();
 		var attributes = new JavaAttributeInfo[numAttributes];
 		for (var i = 0; i < attributes.Length; i++)
-			attributes[i] = JavaPooledAttributeInfo.Read(br).Bake(constantPool);
+			attributes[i] = JavaAttributeInfo.Read(constantPool, br);
 
 		return new JavaCodeAttributeInfo(name, maxStack, maxLocals, instructions, exceptionTable, attributes);
 	}

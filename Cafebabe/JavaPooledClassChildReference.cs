@@ -8,8 +8,8 @@ public record JavaPooledClassChildReference(short ClassRefPoolIdx, short NameTyp
 
 	public JavaClassChildReference Bake(JavaConstantPool constantPool)
 	{
-		var classReference = (string)constantPool.Constants[(short)constantPool.Constants[ClassRefPoolIdx]];
-		var nameAndType = (JavaPooledNameAndTypeDescriptor)constantPool.Constants[NameTypePoolIdx];
+		var classReference = constantPool.GetClassInfo(ClassRefPoolIdx);
+		var nameAndType = constantPool.GetNameTypeInfo(NameTypePoolIdx);
 		return new JavaClassChildReference(classReference, nameAndType.Bake(constantPool));
 	}
 }

@@ -8,8 +8,8 @@ public record JavaPooledNameAndTypeDescriptor(short NamePoolIdx, short TypeDescr
 
 	public JavaNameAndTypeDescriptor Bake(JavaConstantPool constantPool)
 	{
-		var name = (string)constantPool.Constants[NamePoolIdx];
-		var type = (string)constantPool.Constants[TypeDescriptor];
+		var name = constantPool.GetString(NamePoolIdx);
+		var type = constantPool.GetString(TypeDescriptor);
 		return new JavaNameAndTypeDescriptor(name, type);
 	}
 }
