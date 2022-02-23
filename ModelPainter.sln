@@ -6,6 +6,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.IO.FileSystem.Watche
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cafebabe", "Cafebabe\Cafebabe.csproj", "{586A528F-3F10-43D2-872D-0DA5AB3D48C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinecraftMappings.NET", "MinecraftMappings.NET\MinecraftMappings.NET.csproj", "{62F3B96F-E225-4781-9F87-D406FCB6CDA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox", "Sandbox\Sandbox.csproj", "{51B151ED-C640-4B6F-AFDA-F984C9D5819A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{586A528F-3F10-43D2-872D-0DA5AB3D48C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{586A528F-3F10-43D2-872D-0DA5AB3D48C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{586A528F-3F10-43D2-872D-0DA5AB3D48C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62F3B96F-E225-4781-9F87-D406FCB6CDA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62F3B96F-E225-4781-9F87-D406FCB6CDA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62F3B96F-E225-4781-9F87-D406FCB6CDA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62F3B96F-E225-4781-9F87-D406FCB6CDA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51B151ED-C640-4B6F-AFDA-F984C9D5819A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51B151ED-C640-4B6F-AFDA-F984C9D5819A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51B151ED-C640-4B6F-AFDA-F984C9D5819A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51B151ED-C640-4B6F-AFDA-F984C9D5819A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

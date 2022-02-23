@@ -106,9 +106,6 @@ internal class EndiannessAwareBinaryReader : BinaryReader
 
 	private void ReadReverse(byte[] buffer, int index, int count)
 	{
-		if (BaseStream.Position + count > BaseStream.Length)
-			throw new EndOfStreamException();
-
 		for (var i = 0; i < count; i++) buffer[index + count - i - 1] = ReadByte();
 	}
 }
