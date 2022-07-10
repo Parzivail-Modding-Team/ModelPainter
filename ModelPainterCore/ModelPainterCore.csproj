@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="JeremyAnsel.Media.WavefrontObj" Version="3.0.20" />
+      <PackageReference Include="minecraft-dotnet.Substrate" Version="2.0.44-alpha" />
+      <PackageReference Include="OpenTK" Version="4.7.4" />
+      <PackageReference Include="SkiaSharp" Version="2.88.1-preview.79" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Cafebabe\Cafebabe.csproj" />
+      <ProjectReference Include="..\System.IO.FileSystem.Watcher.Polling\System.IO.FileSystem.Watcher.Polling.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\model.frag" />
+      <EmbeddedResource Include="Resources\model.frag" />
+      <None Remove="Resources\model.vert" />
+      <EmbeddedResource Include="Resources\model.vert" />
+      <None Remove="Resources\screen.frag" />
+      <EmbeddedResource Include="Resources\screen.frag" />
+      <None Remove="Resources\screen.vert" />
+      <EmbeddedResource Include="Resources\screen.vert" />
+      <None Remove="Resources\icon_32.png" />
+      <EmbeddedResource Include="Resources\icon_32.png" />
+      <None Remove="Resources\icon_24.png" />
+      <EmbeddedResource Include="Resources\icon_24.png" />
+      <None Remove="Resources\icon_16.png" />
+      <EmbeddedResource Include="Resources\icon_16.png" />
+      <None Remove="Resources\icon.png" />
+      <EmbeddedResource Include="Resources\icon.png" />
+      <None Remove="Resources\icon.ico" />
+      <EmbeddedResource Include="Resources\icon.ico" />
+    </ItemGroup>
+
+</Project>

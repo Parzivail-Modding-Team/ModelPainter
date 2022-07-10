@@ -1,5 +1,4 @@
-﻿using ModelPainter.Resources;
-using ModelPainter.Util;
+﻿using ModelPainterCore.Util;
 
 namespace ModelPainter.View;
 

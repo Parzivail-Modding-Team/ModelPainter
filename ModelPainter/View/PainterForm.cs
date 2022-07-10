@@ -1,14 +1,6 @@
 ﻿using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using ModelPainter.Model;
-using ModelPainter.Model.DCM;
-using ModelPainter.Model.OBJ;
-using ModelPainter.Model.P3D;
-using ModelPainter.Model.TBL;
-using ModelPainter.Model.TCN;
-using ModelPainter.Render;
-using ModelPainter.Util;
-using SkiaSharp.Views.Desktop;
+using ModelPainterCore.Util;
 
 namespace ModelPainter.View;
 

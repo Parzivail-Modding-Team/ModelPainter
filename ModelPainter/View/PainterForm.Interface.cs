@@ -1,14 +1,6 @@
 ﻿using ModelPainter.Controls;
-using ModelPainter.Model.DCM;
-using ModelPainter.Model.NEM;
-using ModelPainter.Model.OBJ;
-using ModelPainter.Model.P3D;
-using ModelPainter.Model.TBL;
-using ModelPainter.Model.TCN;
-using ModelPainter.Resources;
-using ModelPainter.Util;
+using ModelPainterCore.Util;
 using OpenTK;
-using OpenTK.Graphics;
 
 namespace ModelPainter.View;
 

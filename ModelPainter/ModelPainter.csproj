@@ -13,30 +13,26 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="JeremyAnsel.Media.WavefrontObj" Version="2.0.19"/>
-        <PackageReference Include="minecraft-dotnet.Substrate" Version="2.0.44-alpha"/>
-        <PackageReference Include="OpenTK.GLControl" Version="3.1.0"/>
-        <PackageReference Include="SkiaSharp" Version="2.88.0-preview.187"/>
-        <PackageReference Include="SkiaSharp.Views.WindowsForms" Version="2.88.0-preview.187"/>
-        <PackageReference Include="System.Drawing.Common" Version="6.0.2-mauipre.1.22054.8"/>
+        <PackageReference Include="JeremyAnsel.Media.WavefrontObj" Version="2.0.19" />
+        <PackageReference Include="minecraft-dotnet.Substrate" Version="2.0.44-alpha" />
+        <PackageReference Include="OpenTK.GLControl" Version="3.1.0" />
+        <PackageReference Include="SkiaSharp" Version="2.88.0-preview.187" />
+        <PackageReference Include="SkiaSharp.Views.WindowsForms" Version="2.88.0-preview.187" />
+        <PackageReference Include="System.Drawing.Common" Version="6.0.2-mauipre.1.22054.8" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Cafebabe\Cafebabe.csproj"/>
-        <ProjectReference Include="..\System.IO.FileSystem.Watcher.Polling\System.IO.FileSystem.Watcher.Polling.csproj"/>
+        <ProjectReference Include="..\Cafebabe\Cafebabe.csproj" />
+        <ProjectReference Include="..\ModelPainterCore\ModelPainterCore.csproj" />
+        <ProjectReference Include="..\System.IO.FileSystem.Watcher.Polling\System.IO.FileSystem.Watcher.Polling.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="Resources\model.frag"/>
-        <EmbeddedResource Include="Resources\model.frag"/>
-        <None Remove="Resources\model.vert"/>
-        <EmbeddedResource Include="Resources\model.vert"/>
-        <None Remove="Resources\screen.frag"/>
-        <EmbeddedResource Include="Resources\screen.frag"/>
-        <None Remove="Resources\screen.vert"/>
-        <EmbeddedResource Include="Resources\screen.vert"/>
-        <None Remove="Resources\favicon.ico"/>
-        <EmbeddedResource Include="Resources\icon.ico"/>
+        <None Remove="Resources\model.frag" />
+        <None Remove="Resources\model.vert" />
+        <None Remove="Resources\screen.frag" />
+        <None Remove="Resources\screen.vert" />
+        <None Remove="Resources\favicon.ico" />
     </ItemGroup>
 
 </Project>

@@ -1,8 +1,9 @@
-﻿using OpenTK;
+﻿using ModelPainterCore.View;
+using OpenTK;
 
 namespace ModelPainter.View;
 
-public class GlControlContext : ControlContext<GLControl>
+public class GlControlContext : ControlContext
 {
 	private readonly ManualResetEventSlim _dirtyHandle;
 
