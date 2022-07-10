@@ -69,11 +69,10 @@ public class ModelRenderer
 
         _renderContext.MouseMove += OnMouseMove;
         _renderContext.MouseWheel += OnMouseWheel;
-        _renderContext.RenderFrame += Render;
 
         renderContext.MakeCurrent();
-        GL.Enable(EnableCap.DebugOutput);
-        GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
+        // GL.Enable(EnableCap.DebugOutput);
+        // GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
     }
 
     private void CreateScreenVao()

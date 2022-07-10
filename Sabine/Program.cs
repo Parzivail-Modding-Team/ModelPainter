@@ -13,7 +13,7 @@ public class Program
     {
         Application.Init();
 
-        var app = new Application("org.GtkNamespace.GtkNamespace", GLib.ApplicationFlags.None);
+        var app = new Application("com.parzivail.Sabine", GLib.ApplicationFlags.None);
         app.Register(GLib.Cancellable.Current);
 
         var win = new MainWindow();

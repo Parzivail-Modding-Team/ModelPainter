@@ -14,7 +14,7 @@ public enum MouseButtons
 
 public record MouseWheelDelta(float Delta);
 
-public interface IControl
+public interface IControlBackend
 {
 	public event EventHandler<Vector2> MouseMove; 
 	public event EventHandler<MouseButtons> MouseDown; 
@@ -30,15 +30,15 @@ public interface IControl
 
 public class ControlContext
 {
-	protected readonly IControl _control;
+	protected readonly IControlBackend ControlBackend;
 	private Vector2 _lastMousePos = Vector2.Zero;
 	private MouseButtons _mouseState = MouseButtons.None;
 
 	/// <inheritdoc />
-	public int Width => _control.Width;
+	public int Width => ControlBackend.Width;
 
 	/// <inheritdoc />
-	public int Height => _control.Height;
+	public int Height => ControlBackend.Height;
 
 	/// <inheritdoc />
 	public Vector2 MousePosition { get; private set; } = Vector2.Zero;
@@ -49,18 +49,15 @@ public class ControlContext
 	/// <inheritdoc />
 	public event EventHandler<float> MouseWheel;
 
-	/// <inheritdoc />
-	public event EventHandler<EventArgs> RenderFrame;
-
-	public ControlContext(IControl control)
+	public ControlContext(IControlBackend controlBackend)
 	{
-		_control = control;
+		ControlBackend = controlBackend;
 
-		control.MouseMove += OnMousePositionChange;
-		control.MouseDown += (sender, button) => _mouseState |= button;
-		control.MouseUp += (sender, button) => _mouseState &= ~button;
+		controlBackend.MouseMove += OnMousePositionChange;
+		controlBackend.MouseDown += (sender, button) => _mouseState |= button;
+		controlBackend.MouseUp += (sender, button) => _mouseState &= ~button;
 
-		control.MouseWheel += (sender, args) => MouseWheel?.Invoke(sender, args.Delta);
+		controlBackend.MouseWheel += (sender, args) => MouseWheel?.Invoke(sender, args.Delta);
 	}
 
 	private void OnMousePositionChange(object? sender, Vector2 e)
@@ -86,11 +83,11 @@ public class ControlContext
 	/// <inheritdoc />
 	public virtual void MarkDirty()
 	{
-		_control.Invalidate();
+		ControlBackend.Invalidate();
 	}
 
 	public void MakeCurrent()
 	{
-		_control.MakeCurrent();
+		ControlBackend.MakeCurrent();
 	}
 }

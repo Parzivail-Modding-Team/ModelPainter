@@ -58,7 +58,6 @@ public class SurfaceRenderer : IDisposable
 
 		_renderContext.MouseMove += OnMouseMove;
 		_renderContext.MouseWheel += OnMouseWheel;
-		_renderContext.RenderFrame += Render;
 	}
 
 	public SKMatrix ContentTransformation { get; set; } = SKMatrix.Identity;
@@ -115,8 +114,10 @@ public class SurfaceRenderer : IDisposable
 		_renderContext.MarkDirty();
 	}
 
-	private void Render(object? sender, EventArgs args)
+	public void Render()
 	{
+		_renderContext.MakeCurrent();
+		
 		const ClearBufferMask bits = ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit |
 		                             ClearBufferMask.StencilBufferBit;
 		// Reset the view

@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
-using OpenTK;
+using OpenTK.Mathematics;
 
-namespace ModelPainter.Util;
+namespace ModelPainterCore.Util;
 
 public static class BinaryReaderExt
 {

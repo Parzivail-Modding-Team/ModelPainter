@@ -6,7 +6,11 @@ public class Framebuffer : IDisposable
 {
 	private readonly int _unboundFbo;
 
+	private int _maxSamples;
 	private int _samples;
+
+	private bool _forceSingleSampleTexture = false;
+	
 	private readonly PixelInternalFormat _internalFormat;
 	private readonly PixelFormat _format;
 	private readonly PixelType _pixelType;
@@ -21,7 +25,7 @@ public class Framebuffer : IDisposable
 		get => _samples;
 		set
 		{
-			_samples = value;
+			_samples = Math.Min(value, _maxSamples);
 			Init(Width, Height);
 		}
 	}
@@ -29,8 +33,10 @@ public class Framebuffer : IDisposable
 	public Framebuffer(int samples, PixelInternalFormat internalFormat = PixelInternalFormat.Rgba, PixelFormat format = PixelFormat.Rgba, PixelType pixelType = PixelType.UnsignedByte,
 		int unboundFbo = 0)
 	{
+		GL.GetInteger(GetPName.MaxSamples, out _maxSamples);
+		
 		_unboundFbo = unboundFbo;
-		_samples = samples;
+		_samples = Math.Min(samples, _maxSamples);
 		_internalFormat = internalFormat;
 		_format = format;
 		_pixelType = pixelType;
@@ -49,10 +55,10 @@ public class Framebuffer : IDisposable
 
 		Use();
 
-		if (_samples == 1)
+		if (_forceSingleSampleTexture)
 		{
 			GL.BindTexture(TextureTarget.Texture2D, Texture);
-
+		
 			GL.TexImage2D(TextureTarget.Texture2D, 0, _internalFormat, width, height, 0, _format, _pixelType, IntPtr.Zero);
 			GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, Texture, 0);
 		}

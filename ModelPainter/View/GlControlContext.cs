@@ -34,6 +34,6 @@ public class GlControlContext : ControlContext
 
 	public void MakeCurrent()
 	{
-		_control.MakeCurrent();
+		ControlBackend.MakeCurrent();
 	}
 }
