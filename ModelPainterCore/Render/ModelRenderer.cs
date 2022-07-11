@@ -161,12 +161,12 @@ public class ModelRenderer
         _shaderGizmo.Uniforms.SetValue("v", view);
         _shaderGizmo.Uniforms.SetValue("p", perspective);
         _shaderGizmo.Use();
-        
+
         GL.BindVertexArray(_gizmoVao);
         GL.DrawArrays(PrimitiveType.Lines, 0, 6);
-        
+
         _shaderGizmo.Release();
-        
+
         GL.Enable(EnableCap.Texture2D);
         GL.Enable(EnableCap.DepthTest);
     }
@@ -229,7 +229,7 @@ public class ModelRenderer
         {
             CreateScreenVao();
             CreateGizmoVao();
-            
+
             GL.GetInteger(GetPName.FramebufferBinding, out var fbo);
             _viewFbo = new Framebuffer(8, unboundFbo: fbo);
             _selectionFbo = new Framebuffer(1, unboundFbo: fbo);
@@ -248,7 +248,7 @@ public class ModelRenderer
             _shaderModel.Uniforms.SetValue("texModel", 1);
             _shaderModel.Uniforms.SetValue("texOverlay", 2);
             _shaderModel.Uniforms.SetValue("lightPos", new Vector3(0.6f, -1, 0.8f));
-            
+
             _shaderGizmo = new ShaderProgram(ResourceHelper.GetLocalStringResource("gizmo.frag"),
                 ResourceHelper.GetLocalStringResource("gizmo.vert"));
 
@@ -402,7 +402,7 @@ public class ModelRenderer
             _viewFbo.Use();
             GL.ClearColor(_backgroundColor);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            
+
             DrawGizmo(Matrix4.Identity, view, perspective);
 
             GL.Color4(Color4.White);
@@ -448,26 +448,14 @@ public class ModelRenderer
         _viewFbo.Use();
         // 2D Viewport
         {
-            // GL.PushMatrix();
-            //
-            // GL.MatrixMode(MatrixMode.Projection);
-            // GL.LoadIdentity();
-            // GL.Ortho(0, width, height, 0, -100, 100);
-            // GL.MatrixMode(MatrixMode.Modelview);
-            // GL.LoadIdentity();
-            //
-            // GL.PushMatrix();
-            // GL.Translate(40, height - 40, 0);
-            //
-            // GL.Scale(30 * Vector3.One);
-            // GL.Scale(1, -1, 1);
-            //
-            // GL.Rotate(-_rotation.X, 1, 0, 0);
-            // GL.Rotate(-_rotation.Y, 0, 1, 0);
-            // RenderOriginAxes();
-            // GL.PopMatrix();
-            //
-            // GL.PopMatrix();
+            var ortho = Matrix4.CreateOrthographic(width, height, -100, 100);
+
+            var view2d = Matrix4.CreateRotationY((float)(-_rotation.Y / 180 * Math.PI))
+                         * Matrix4.CreateRotationX((float)(-_rotation.X / 180 * Math.PI))
+                         * Matrix4.CreateScale(25)
+                         * Matrix4.CreateTranslation(-width / 2f + 30, -height / 2f + 30, 0);
+
+            DrawGizmo(Matrix4.Identity, view2d, ortho);
         }
 
         _viewFbo.Release();
@@ -508,7 +496,9 @@ public class ModelRenderer
         return string.Join('\n',
             Environment.StackTrace
                 .Split('\n')
-                .Where(s => !s.Contains("System.Environment.get_StackTrace") && !s.Contains(nameof(GetTrimmedStackTrace)) && (callerName == null || !s.Contains(callerName)))
+                .Where(s => !s.Contains("System.Environment.get_StackTrace") &&
+                            !s.Contains(nameof(GetTrimmedStackTrace)) &&
+                            (callerName == null || !s.Contains(callerName)))
         );
     }
 
