@@ -27,7 +27,7 @@ public class GlControlContext : ControlContext
 	}
 
 	/// <inheritdoc />
-	public override void MarkDirty()
+	public override void SwapBuffers()
 	{
 		_dirtyHandle.Set();
 	}

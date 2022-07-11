@@ -1,6 +1,7 @@
 using Gtk;
 using ModelPainterCore.Render;
 using ModelPainterCore.View;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using Sabine.GraphicsBindings;
 using UI = Gtk.Builder.ObjectAttribute;
@@ -12,6 +13,7 @@ class MainWindow : Window
     [UI] private GLArea _viewport3d;
     [UI] private GLArea _viewport2d;
 
+    private readonly IBindingsContext _renderBindingsContext = new NativeBindingsContext();
     private ModelRenderer _modelRenderer;
     private SurfaceRenderer _surfaceRenderer;
 
@@ -34,7 +36,7 @@ class MainWindow : Window
     private void Viewport3dCreated(object? o, EventArgs args)
     {
         _viewport3d.MakeCurrent();
-        GL.LoadBindings(new NativeBindingsContext());
+        GL.LoadBindings(_renderBindingsContext);
 
         _modelRenderer = new ModelRenderer(new ControlContext(new GtkGlControlBackend(_viewport3d)));
     }
@@ -47,9 +49,7 @@ class MainWindow : Window
     private void Viewport2dCreated(object? o, EventArgs args)
     {
         _viewport2d.MakeCurrent();
-        GL.LoadBindings(new NativeBindingsContext());
-        
-        _surfaceRenderer = new SurfaceRenderer(new ControlContext(new GtkGlControlBackend(_viewport2d)));
+        _surfaceRenderer = new SurfaceRenderer(new ControlContext(new GtkGlControlBackend(_viewport2d)), _renderBindingsContext);
     }
 
     private void Viewport2dOnRender(object sender, RenderArgs e)

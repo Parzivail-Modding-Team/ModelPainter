@@ -25,11 +25,13 @@ public class ModelRenderer
     private readonly VertexBuffer _vbo = new();
 
     private int _screenVao = -1;
+    private int _gizmoVao = -1;
     private Framebuffer _viewFbo;
     private Framebuffer _selectionFbo;
     private Framebuffer _uvFbo;
     private ShaderProgram _shaderScreen;
     private ShaderProgram _shaderModel;
+    private ShaderProgram _shaderGizmo;
 
     private PixelBuffer<uint> _selectionBuffer;
     private PixelBuffer<float> _uvBuffer;
@@ -53,7 +55,7 @@ public class ModelRenderer
     private Vector2? _loadPointedUv;
     private int _loadBitmapWidth;
     private int _loadBitmapHeight;
-    private byte[] _loadBitmap;
+    private byte[]? _loadBitmap;
 
     public ModelRenderer(ControlContext renderContext)
     {
@@ -90,9 +92,9 @@ public class ModelRenderer
         };
 
         _screenVao = GL.GenVertexArray();
-        var screenVbo = GL.GenBuffer();
+        var vbo = GL.GenBuffer();
         GL.BindVertexArray(_screenVao);
-        GL.BindBuffer(BufferTarget.ArrayBuffer, screenVbo);
+        GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
         GL.BufferData(BufferTarget.ArrayBuffer, quadVertices.Length * sizeof(float), quadVertices,
             BufferUsageHint.StaticDraw);
         GL.EnableVertexAttribArray(0);
@@ -101,6 +103,35 @@ public class ModelRenderer
             BufferUsageHint.StaticDraw);
         GL.EnableVertexAttribArray(1);
         GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), 2 * sizeof(float));
+        GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        GL.BindVertexArray(0);
+    }
+
+    private void CreateGizmoVao()
+    {
+        float[] gizmo =
+        {
+            // XYZ,RGB
+            0, 0, 0, 1, 0, 0,
+            1, 0, 0, 1, 0, 0,
+            0, 0, 0, 0, 1, 0,
+            0, 1, 0, 0, 1, 0,
+            0, 0, 0, 0, 0, 1,
+            0, 0, 1, 0, 0, 1,
+        };
+
+        _gizmoVao = GL.GenVertexArray();
+        var vbo = GL.GenBuffer();
+        GL.BindVertexArray(_gizmoVao);
+        GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+        GL.BufferData(BufferTarget.ArrayBuffer, gizmo.Length * sizeof(float), gizmo,
+            BufferUsageHint.StaticDraw);
+        GL.EnableVertexAttribArray(0);
+        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
+        GL.BufferData(BufferTarget.ArrayBuffer, gizmo.Length * sizeof(float), gizmo,
+            BufferUsageHint.StaticDraw);
+        GL.EnableVertexAttribArray(1);
+        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         GL.BindVertexArray(0);
     }
@@ -118,6 +149,25 @@ public class ModelRenderer
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
 
         GL.Disable(EnableCap.Texture2D);
+        GL.Enable(EnableCap.DepthTest);
+    }
+
+    private void DrawGizmo(Matrix4 model, Matrix4 view, Matrix4 perspective)
+    {
+        GL.Disable(EnableCap.DepthTest);
+        GL.Disable(EnableCap.Texture2D);
+
+        _shaderGizmo.Uniforms.SetValue("m", model);
+        _shaderGizmo.Uniforms.SetValue("v", view);
+        _shaderGizmo.Uniforms.SetValue("p", perspective);
+        _shaderGizmo.Use();
+        
+        GL.BindVertexArray(_gizmoVao);
+        GL.DrawArrays(PrimitiveType.Lines, 0, 6);
+        
+        _shaderGizmo.Release();
+        
+        GL.Enable(EnableCap.Texture2D);
         GL.Enable(EnableCap.DepthTest);
     }
 
@@ -165,7 +215,7 @@ public class ModelRenderer
         _rotation = new Vector2(-35.264f, 45);
         _translation = Vector3.Zero;
 
-        _renderContext.MarkDirty();
+        _renderContext.SwapBuffers();
     }
 
     public void Render(bool useAlphaTestSelectMode)
@@ -178,9 +228,12 @@ public class ModelRenderer
         if (_screenVao == -1)
         {
             CreateScreenVao();
-            _viewFbo = new Framebuffer(8);
-            _selectionFbo = new Framebuffer(1);
-            _uvFbo = new Framebuffer(1, PixelInternalFormat.Rg32f, PixelFormat.Rg, PixelType.Float);
+            CreateGizmoVao();
+            
+            GL.GetInteger(GetPName.FramebufferBinding, out var fbo);
+            _viewFbo = new Framebuffer(8, unboundFbo: fbo);
+            _selectionFbo = new Framebuffer(1, unboundFbo: fbo);
+            _uvFbo = new Framebuffer(1, PixelInternalFormat.Rg32f, PixelFormat.Rg, PixelType.Float, unboundFbo: fbo);
 
             _selectionBuffer = new PixelBuffer<uint>(1, PixelFormat.Bgra, PixelType.UnsignedInt8888);
             _uvBuffer = new PixelBuffer<float>(2, PixelFormat.Rg, PixelType.Float);
@@ -195,6 +248,9 @@ public class ModelRenderer
             _shaderModel.Uniforms.SetValue("texModel", 1);
             _shaderModel.Uniforms.SetValue("texOverlay", 2);
             _shaderModel.Uniforms.SetValue("lightPos", new Vector3(0.6f, -1, 0.8f));
+            
+            _shaderGizmo = new ShaderProgram(ResourceHelper.GetLocalStringResource("gizmo.frag"),
+                ResourceHelper.GetLocalStringResource("gizmo.vert"));
 
             _defaultTexture = GL.GenTexture();
 
@@ -346,17 +402,8 @@ public class ModelRenderer
             _viewFbo.Use();
             GL.ClearColor(_backgroundColor);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            GL.PushMatrix();
-
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadMatrix(ref perspective);
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadMatrix(ref view);
-
-            RenderOriginAxes();
-
-            GL.PopMatrix();
+            
+            DrawGizmo(Matrix4.Identity, view, perspective);
 
             GL.Color4(Color4.White);
 
@@ -401,44 +448,44 @@ public class ModelRenderer
         _viewFbo.Use();
         // 2D Viewport
         {
-            GL.PushMatrix();
-
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadIdentity();
-            GL.Ortho(0, width, height, 0, -100, 100);
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
-
-            GL.PushMatrix();
-            GL.Translate(40, height - 40, 0);
-
-            GL.Scale(30 * Vector3.One);
-            GL.Scale(1, -1, 1);
-
-            GL.Rotate(-_rotation.X, 1, 0, 0);
-            GL.Rotate(-_rotation.Y, 0, 1, 0);
-            RenderOriginAxes();
-            GL.PopMatrix();
-
-            GL.PopMatrix();
+            // GL.PushMatrix();
+            //
+            // GL.MatrixMode(MatrixMode.Projection);
+            // GL.LoadIdentity();
+            // GL.Ortho(0, width, height, 0, -100, 100);
+            // GL.MatrixMode(MatrixMode.Modelview);
+            // GL.LoadIdentity();
+            //
+            // GL.PushMatrix();
+            // GL.Translate(40, height - 40, 0);
+            //
+            // GL.Scale(30 * Vector3.One);
+            // GL.Scale(1, -1, 1);
+            //
+            // GL.Rotate(-_rotation.X, 1, 0, 0);
+            // GL.Rotate(-_rotation.Y, 0, 1, 0);
+            // RenderOriginAxes();
+            // GL.PopMatrix();
+            //
+            // GL.PopMatrix();
         }
 
         _viewFbo.Release();
 
         {
-            GL.PushMatrix();
-
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadIdentity();
-            GL.Ortho(-1, 1, -1, 1, -1, 1);
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
+            // GL.PushMatrix();
+            //
+            // GL.MatrixMode(MatrixMode.Projection);
+            // GL.LoadIdentity();
+            // GL.Ortho(-1, 1, -1, 1, -1, 1);
+            // GL.MatrixMode(MatrixMode.Modelview);
+            // GL.LoadIdentity();
 
             _shaderScreen.Use();
             DrawFullscreenQuad();
             _shaderScreen.Release();
 
-            GL.PopMatrix();
+            // GL.PopMatrix();
         }
 
         _selectionBuffer.Copy();
@@ -491,14 +538,14 @@ public class ModelRenderer
             _translation.X += delta.X / 50f;
             _translation.Y -= delta.Y / 50f;
 
-            _renderContext.MarkDirty();
+            _renderContext.SwapBuffers();
         }
         else if (_renderContext.IsMouseDown(MouseButton.Left))
         {
             _rotation.X -= delta.Y / 2f;
             _rotation.Y -= delta.X / 2f;
 
-            _renderContext.MarkDirty();
+            _renderContext.SwapBuffers();
         }
     }
 
@@ -518,7 +565,7 @@ public class ModelRenderer
         if (_zoom < -350)
             _zoom = -350;
 
-        _renderContext.MarkDirty();
+        _renderContext.SwapBuffers();
     }
 
     public void SetSelectedCuboidId(Guid id)
@@ -534,7 +581,7 @@ public class ModelRenderer
         _loadBitmapWidth = bitmap.Width;
         _loadBitmapHeight = bitmap.Height;
 
-        _renderContext.MarkDirty();
+        _renderContext.SwapBuffers();
     }
 
     public void UploadModelQuads(VboData data, Dictionary<uint, Guid> objectIdMap)
@@ -546,7 +593,7 @@ public class ModelRenderer
         var (v, n, t, id, e) = data;
         _vbo.InitializeVbo(v, n, t, id, e);
 
-        _renderContext.MarkDirty();
+        _renderContext.SwapBuffers();
     }
 
     public void SetBackgroundColor(Color color)
@@ -570,6 +617,6 @@ public class ModelRenderer
             return;
 
         _loadPointedUv = pixel;
-        _renderContext.MarkDirty();
+        _renderContext.SwapBuffers();
     }
 }

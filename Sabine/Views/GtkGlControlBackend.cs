@@ -1,3 +1,4 @@
+using Gdk;
 using Gtk;
 using ModelPainterCore.View;
 using OpenTK.Mathematics;
@@ -19,6 +20,7 @@ internal class GtkGlControlBackend : IControlBackend
     public GtkGlControlBackend(GLArea viewport)
     {
         _viewport = viewport;
+        _viewport.AddEvents((int)(EventMask.PointerMotionMask | EventMask.ScrollMask | EventMask.ButtonPressMask | EventMask.ButtonReleaseMask));
         _viewport.MotionNotifyEvent += (o, args) =>
         {
             MouseMove?.Invoke(this, new Vector2((float)args.Event.X, (float)args.Event.Y));
@@ -59,7 +61,7 @@ internal class GtkGlControlBackend : IControlBackend
         };
     }
 
-    public void Invalidate()
+    public void SwapBuffers()
     {
         _viewport.QueueRender();
     }

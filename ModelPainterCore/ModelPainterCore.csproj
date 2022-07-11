@@ -22,6 +22,8 @@
 
     <ItemGroup>
       <None Remove="Resources\model.frag" />
+      <EmbeddedResource Include="Resources\gizmo.frag" />
+      <EmbeddedResource Include="Resources\gizmo.vert" />
       <EmbeddedResource Include="Resources\model.frag" />
       <None Remove="Resources\model.vert" />
       <EmbeddedResource Include="Resources\model.vert" />

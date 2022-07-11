@@ -12,6 +12,7 @@
         <EmbeddedResource Include="**\*.glade">
             <LogicalName>%(Filename)%(Extension)</LogicalName>
         </EmbeddedResource>
+        <None Remove="Views\MainWindow.glade~" />
     </ItemGroup>
 
     <ItemGroup>

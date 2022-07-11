@@ -1,4 +1,5 @@
 ﻿using ModelPainterCore.View;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -12,6 +13,7 @@ public class SurfaceRenderer : IDisposable
 	private const GRSurfaceOrigin SurfaceOrigin = GRSurfaceOrigin.BottomLeft;
 
 	private readonly ControlContext _renderContext;
+	private readonly IBindingsContext _bindingsContext;
 
 	private static readonly float _transparentCheckerboardScale = 8f;
 	private static readonly SKPaint _transparentCheckerboardPaint;
@@ -31,30 +33,32 @@ public class SurfaceRenderer : IDisposable
 		_textPaint = new SKPaint(new SKFont(SKTypeface.Default, 16))
 		{
 			Color = SKColors.White,
-			Style = SKPaintStyle.Fill
+			Style = SKPaintStyle.Fill,
+			IsAntialias = true
 		};
 	}
 
 	private readonly object _textureLock = new();
 	private readonly SKPath _uvMapPath = new();
-	private SKBitmap _texture;
+	private SKBitmap? _texture;
 	private int _textureWidth;
 	private int _textureHeight;
-	private KeyValuePair<string, string>[] _hudData;
+	private KeyValuePair<string, string>[]? _hudData;
 	private Vector2? _previewedUv;
 
-	private SKCanvas _canvas;
-	private SKSurface _surface;
+	private SKCanvas? _canvas;
+	private SKSurface? _surface;
 	private GRGlFramebufferInfo _glInfo;
-	private GRContext _grContext;
+	private GRContext? _grContext;
 	private SKSizeI _size;
 	private SKSizeI _lastSize;
-	private GRBackendRenderTarget _renderTarget;
+	private GRBackendRenderTarget? _renderTarget;
 	private bool _invertColors;
 
-	public SurfaceRenderer(ControlContext renderContext)
+	public SurfaceRenderer(ControlContext renderContext, IBindingsContext bindingsContext)
 	{
 		_renderContext = renderContext;
+		_bindingsContext = bindingsContext;
 
 		_renderContext.MouseMove += OnMouseMove;
 		_renderContext.MouseWheel += OnMouseWheel;
@@ -67,7 +71,7 @@ public class SurfaceRenderer : IDisposable
 		if (_renderContext.IsMouseDown(MouseButton.Left))
 		{
 			ContentTransformation = ContentTransformation.PostConcat(SKMatrix.CreateTranslation(delta.X, delta.Y));
-			_renderContext.MarkDirty();
+			_renderContext.SwapBuffers();
 		}
 	}
 
@@ -82,7 +86,7 @@ public class SurfaceRenderer : IDisposable
 			ContentTransformation =
 				ContentTransformation.PreConcat(SKMatrix.CreateScale(0.5f, 0.5f, localPos.X, localPos.Y));
 
-		_renderContext.MarkDirty();
+		_renderContext.SwapBuffers();
 	}
 
 	public void SetTexture(SKBitmap bitmap, KeyValuePair<string, string>[] hudData)
@@ -104,24 +108,19 @@ public class SurfaceRenderer : IDisposable
 				.PreConcat(SKMatrix.CreateTranslation((_renderContext.Width - _textureWidth) / 2f, (_renderContext.Height - _textureHeight) / 2f));
 		}
 
-		_renderContext.MarkDirty();
+		_renderContext.SwapBuffers();
 	}
 
 	public void SetPointedUv(Vector2? uv)
 	{
 		_previewedUv = uv;
 
-		_renderContext.MarkDirty();
+		_renderContext.SwapBuffers();
 	}
 
 	public void Render()
 	{
 		_renderContext.MakeCurrent();
-		
-		const ClearBufferMask bits = ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit |
-		                             ClearBufferMask.StencilBufferBit;
-		// Reset the view
-		GL.Clear(bits);
 
 		var width = Math.Max(_renderContext.Width, 1);
 		var height = Math.Max(_renderContext.Height, 1);
@@ -132,7 +131,7 @@ public class SurfaceRenderer : IDisposable
 		// create the contexts if not done already
 		if (_grContext == null)
 		{
-			var glInterface = GRGlInterface.Create();
+			var glInterface = GRGlInterface.Create(_bindingsContext.GetProcAddress);
 			_grContext = GRContext.CreateGl(glInterface);
 		}
 
@@ -142,12 +141,13 @@ public class SurfaceRenderer : IDisposable
 			// create or update the dimensions
 			_lastSize = _size;
 
+			GL.GetInteger(GetPName.FramebufferBinding, out var fbo);
 			// GL.GetInteger(GetPName.StencilBits, out var stencil);
 			GL.GetInteger(GetPName.Samples, out var samples);
 			var maxSamples = _grContext.GetMaxSurfaceSampleCount(ColorType);
 			if (samples > maxSamples)
 				samples = maxSamples;
-			_glInfo = new GRGlFramebufferInfo(0, ColorType.ToGlSizedFormat());
+			_glInfo = new GRGlFramebufferInfo((uint)fbo, ColorType.ToGlSizedFormat());
 
 			// destroy the old surface
 			_surface?.Dispose();
@@ -176,6 +176,8 @@ public class SurfaceRenderer : IDisposable
 			Render(_canvas);
 
 		_canvas.Flush();
+		
+		_renderContext.SwapBuffers();
 	}
 
 	private void Render(SKCanvas canvas)
@@ -208,13 +210,10 @@ public class SurfaceRenderer : IDisposable
 			IsStroke = true
 		};
 
-		if (_uvMapPath != null)
-		{
-			canvas.Save();
-			canvas.Scale(_textureWidth, _textureHeight);
-			canvas.DrawPath(_uvMapPath, paint);
-			canvas.Restore();
-		}
+		canvas.Save();
+		canvas.Scale(_textureWidth, _textureHeight);
+		canvas.DrawPath(_uvMapPath, paint);
+		canvas.Restore();
 
 		if (_previewedUv != null)
 		{
@@ -251,7 +250,7 @@ public class SurfaceRenderer : IDisposable
 	{
 		ContentTransformation = SKMatrix.Identity
 			.PreConcat(SKMatrix.CreateTranslation((_renderContext.Width - _textureWidth) / 2f, (_renderContext.Height - _textureHeight) / 2f));
-		_renderContext.MarkDirty();
+		_renderContext.SwapBuffers();
 	}
 
 	public void SetVboData(VboData vboData)
@@ -278,14 +277,14 @@ public class SurfaceRenderer : IDisposable
 	/// <inheritdoc />
 	public void Dispose()
 	{
-		_uvMapPath?.Dispose();
+		_uvMapPath.Dispose();
 		_texture?.Dispose();
 	}
 
 	public void SetInvertColors(bool invert)
 	{
 		_invertColors = invert;
-		_renderContext.MarkDirty();
+		_renderContext.SwapBuffers();
 	}
 
 	public Vector2? GetSurfaceUvAt(int controlX, int controlY)

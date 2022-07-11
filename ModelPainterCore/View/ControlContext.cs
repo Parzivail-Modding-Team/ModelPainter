@@ -24,7 +24,7 @@ public interface IControlBackend
 	public int Width { get; }
 	public int Height { get; }
 
-	void Invalidate();
+	void SwapBuffers();
 	void MakeCurrent();
 }
 
@@ -81,9 +81,9 @@ public class ControlContext
 	}
 
 	/// <inheritdoc />
-	public virtual void MarkDirty()
+	public virtual void SwapBuffers()
 	{
-		ControlBackend.Invalidate();
+		ControlBackend.SwapBuffers();
 	}
 
 	public void MakeCurrent()
