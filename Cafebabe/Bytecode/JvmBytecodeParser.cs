@@ -217,21 +217,28 @@ public static class JvmBytecodeParser
 		return new JvmInstruction(opcode);
 	}
 
-	public static SortedDictionary<short, JvmInstruction> ParseInstructions(JavaConstantPool constantPool, byte[] code)
+	public static (SortedDictionary<short, JvmInstruction> Instructions, SortedDictionary<short, short> OffsetToIcMap) ParseInstructions(JavaConstantPool constantPool, byte[] code)
 	{
 		using var br = new EndiannessAwareBinaryReader(new MemoryStream(code), EndiannessAwareBinaryReader.Endianness.Big);
 
 		var instructions = new SortedDictionary<short, JvmInstruction>();
+		var offsetToInstructionCounterTable = new SortedDictionary<short, short>();
+
+		short instructionCounter = 0;
 
 		while (br.BaseStream.Position < code.Length)
 		{
 			var opcode = (JvmOpcode)br.ReadByte();
 			if (Bakery.TryGetValue(opcode, out var baker))
-				instructions[(short)(br.BaseStream.Position - 1)] = baker.Invoke(constantPool, opcode, br);
+			{
+				instructions[instructionCounter] = baker.Invoke(constantPool, opcode, br);
+				offsetToInstructionCounterTable[(short)(br.BaseStream.Position - 1)] = instructionCounter;
+				instructionCounter++;
+			}
 			else
 				throw new NotSupportedException($"Unsupported opcode \"{opcode}\"");
 		}
 
-		return instructions;
+		return (instructions, offsetToInstructionCounterTable);
 	}
 }
