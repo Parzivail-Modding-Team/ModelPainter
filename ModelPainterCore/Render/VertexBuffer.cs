@@ -17,8 +17,6 @@ public class VertexBuffer : IDisposable
 	public int NumElements;
 	public int VaoId = -1;
 
-	public bool Initialized { get; private set; }
-
 	public VertexBuffer(BufferUsageHint hint = BufferUsageHint.StaticDraw)
 	{
 		_hint = hint;
@@ -28,15 +26,15 @@ public class VertexBuffer : IDisposable
 	{
 		try
 		{
-			if (VaoId == -1)
-				GL.GenVertexArrays(1, out VaoId);
+			if (VaoId == -1) 
+				VaoId = GL.GenVertexArray();
 			GL.BindVertexArray(VaoId);
 
 			// Normal Array Buffer
 			{
 				// Generate Array Buffer Id
 				if (NormalBufferId == -1)
-					GL.GenBuffers(1, out NormalBufferId);
+					NormalBufferId = GL.GenBuffer();
 
 				// Bind current context to Array Buffer ID
 				GL.BindBuffer(BufferTarget.ArrayBuffer, NormalBufferId);
@@ -60,7 +58,7 @@ public class VertexBuffer : IDisposable
 			{
 				// Generate Array Buffer Id
 				if (TexCoordBufferId == -1)
-					GL.GenBuffers(1, out TexCoordBufferId);
+					TexCoordBufferId = GL.GenBuffer();
 
 				// Bind current context to Array Buffer ID
 				GL.BindBuffer(BufferTarget.ArrayBuffer, TexCoordBufferId);
@@ -84,7 +82,7 @@ public class VertexBuffer : IDisposable
 			{
 				// Generate Array Buffer Id
 				if (VertexBufferId == -1)
-					GL.GenBuffers(1, out VertexBufferId);
+					VertexBufferId = GL.GenBuffer();
 
 				// Bind current context to Array Buffer ID
 				GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferId);
@@ -108,7 +106,7 @@ public class VertexBuffer : IDisposable
 			{
 				// Generate Array Buffer Id
 				if (ObjectBufferId == -1)
-					GL.GenBuffers(1, out ObjectBufferId);
+					ObjectBufferId = GL.GenBuffer();
 
 				// Bind current context to Array Buffer ID
 				GL.BindBuffer(BufferTarget.ArrayBuffer, ObjectBufferId);
@@ -132,7 +130,7 @@ public class VertexBuffer : IDisposable
 			{
 				// Generate Array Buffer Id
 				if (ElementBufferId == -1)
-					GL.GenBuffers(1, out ElementBufferId);
+					ElementBufferId = GL.GenBuffer();
 
 				// Bind current context to Array Buffer ID
 				GL.BindBuffer(BufferTarget.ElementArrayBuffer, ElementBufferId);
@@ -169,8 +167,6 @@ public class VertexBuffer : IDisposable
 			GL.VertexAttribPointer(3, 4, VertexAttribPointerType.UnsignedByte, true, 0, 0);
 
 			GL.BindVertexArray(0);
-
-			Initialized = true;
 		}
 		catch (ApplicationException ex)
 		{
@@ -186,8 +182,11 @@ public class VertexBuffer : IDisposable
 	}
 
 
-	public void Render(PrimitiveType type = PrimitiveType.Quads)
+	public void Render(PrimitiveType type = PrimitiveType.Triangles)
 	{
+		if (VaoId == -1)
+			return;
+		
 		GL.BindVertexArray(VaoId);
 		GL.BindBuffer(BufferTarget.ElementArrayBuffer, ElementBufferId);
 		GL.DrawElements(type, NumElements, DrawElementsType.UnsignedInt, IntPtr.Zero);

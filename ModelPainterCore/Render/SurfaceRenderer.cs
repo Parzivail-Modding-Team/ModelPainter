@@ -121,6 +121,8 @@ public class SurfaceRenderer : IDisposable
 	public void Render()
 	{
 		_renderContext.MakeCurrent();
+		
+		GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit | ClearBufferMask.DepthBufferBit);
 
 		var width = Math.Max(_renderContext.Width, 1);
 		var height = Math.Max(_renderContext.Height, 1);
@@ -172,7 +174,7 @@ public class SurfaceRenderer : IDisposable
 		_canvas.Clear(SKColors.White);
 
 		// render the canvas
-		using (new SKAutoCanvasRestore(_canvas, true))
+		using (new SKAutoCanvasRestore(_canvas, true)) 
 			Render(_canvas);
 
 		_canvas.Flush();
@@ -257,12 +259,17 @@ public class SurfaceRenderer : IDisposable
 	{
 		_uvMapPath.Reset();
 
-		for (var i = 0; i < vboData.Elements.Length; i += 4)
+		for (var i = 0; i < vboData.Elements.Length; i += 6)
 		{
-			var p1 = vboData.TexCoords[i];
-			var p2 = vboData.TexCoords[i + 1];
-			var p3 = vboData.TexCoords[i + 2];
-			var p4 = vboData.TexCoords[i + 3];
+			// Vertices are packed as quads, and elements
+			// are packed as triangles. Elements are
+			// packed as [0, 1, 2, 0, 2, 3], so to get
+			// corners [0, 1, 2, 3] we get elements
+			// [0, 1, 2, 5]
+			var p1 = vboData.TexCoords[vboData.Elements[i + 0]];
+			var p2 = vboData.TexCoords[vboData.Elements[i + 1]];
+			var p3 = vboData.TexCoords[vboData.Elements[i + 2]];
+			var p4 = vboData.TexCoords[vboData.Elements[i + 5]];
 
 			_uvMapPath.MoveTo(p1.X, p1.Y);
 			_uvMapPath.LineTo(p2.X, p2.Y);

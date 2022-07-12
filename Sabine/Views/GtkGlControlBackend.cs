@@ -20,7 +20,8 @@ internal class GtkGlControlBackend : IControlBackend
     public GtkGlControlBackend(GLArea viewport)
     {
         _viewport = viewport;
-        _viewport.AddEvents((int)(EventMask.PointerMotionMask | EventMask.ScrollMask | EventMask.ButtonPressMask | EventMask.ButtonReleaseMask));
+        _viewport.AddEvents((int)(EventMask.PointerMotionMask | EventMask.SmoothScrollMask | EventMask.ScrollMask | EventMask.ButtonPressMask |
+                                  EventMask.ButtonReleaseMask));
         _viewport.MotionNotifyEvent += (o, args) =>
         {
             MouseMove?.Invoke(this, new Vector2((float)args.Event.X, (float)args.Event.Y));
@@ -57,7 +58,17 @@ internal class GtkGlControlBackend : IControlBackend
         };
         _viewport.ScrollEvent += (o, args) =>
         {
-            MouseWheel?.Invoke(this, new MouseWheelDelta((float)args.Event.DeltaY));
+            var d = args.Event.Direction switch
+            {
+                ScrollDirection.Up => 1,
+                ScrollDirection.Down => -1,
+                ScrollDirection.Smooth => args.Event.DeltaY,
+                _ => 0
+            };
+            if (d == 0)
+                return;
+            
+            MouseWheel?.Invoke(this, new MouseWheelDelta((float)-d));
         };
     }
 

@@ -48,7 +48,7 @@ public class ModelRenderer
     private Color _backgroundColor;
 
     private int _fovY = 4;
-    private int _zoom = 1;
+    private float _zoom = 1;
     private Vector2 _rotation = new(-35.264f, 45);
     private Vector3 _translation = Vector3.Zero;
 
@@ -73,8 +73,8 @@ public class ModelRenderer
         _renderContext.MouseWheel += OnMouseWheel;
 
         renderContext.MakeCurrent();
-        // GL.Enable(EnableCap.DebugOutput);
-        // GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
+        GL.Enable(EnableCap.DebugOutput);
+        GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
     }
 
     private void CreateScreenVao()
@@ -139,7 +139,6 @@ public class ModelRenderer
     private void DrawFullscreenQuad()
     {
         GL.Disable(EnableCap.DepthTest);
-        GL.Enable(EnableCap.Texture2D);
 
         GL.ActiveTexture(TextureUnit.Texture0);
         GL.BindTexture(_viewFbo.Samples == 1 ? TextureTarget.Texture2D : TextureTarget.Texture2DMultisample,
@@ -148,14 +147,12 @@ public class ModelRenderer
         GL.BindVertexArray(_screenVao);
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
 
-        GL.Disable(EnableCap.Texture2D);
         GL.Enable(EnableCap.DepthTest);
     }
 
     private void DrawGizmo(Matrix4 model, Matrix4 view, Matrix4 perspective)
     {
         GL.Disable(EnableCap.DepthTest);
-        GL.Disable(EnableCap.Texture2D);
 
         _shaderGizmo.Uniforms.SetValue("m", model);
         _shaderGizmo.Uniforms.SetValue("v", view);
@@ -167,7 +164,6 @@ public class ModelRenderer
 
         _shaderGizmo.Release();
 
-        GL.Enable(EnableCap.Texture2D);
         GL.Enable(EnableCap.DepthTest);
     }
 
@@ -232,8 +228,9 @@ public class ModelRenderer
 
             GL.GetInteger(GetPName.FramebufferBinding, out var fbo);
             _viewFbo = new Framebuffer(8, unboundFbo: fbo);
-            _selectionFbo = new Framebuffer(1, unboundFbo: fbo);
-            _uvFbo = new Framebuffer(1, PixelInternalFormat.Rg32f, PixelFormat.Rg, PixelType.Float, unboundFbo: fbo);
+            _selectionFbo = new Framebuffer(1, unboundFbo: fbo, forceSingleSampleTexture: true);
+            _uvFbo = new Framebuffer(1, PixelInternalFormat.Rg32f, PixelFormat.Rg, PixelType.Float, unboundFbo: fbo,
+                forceSingleSampleTexture: true);
 
             _selectionBuffer = new PixelBuffer<uint>(1, PixelFormat.Bgra, PixelType.UnsignedInt8888);
             _uvBuffer = new PixelBuffer<float>(2, PixelFormat.Rg, PixelType.Float);
@@ -405,17 +402,17 @@ public class ModelRenderer
 
             DrawGizmo(Matrix4.Identity, view, perspective);
 
-            GL.Color4(Color4.White);
-
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, _modelTexture == -1 ? _defaultTexture : _modelTexture);
             GL.ActiveTexture(TextureUnit.Texture2);
-            GL.BindTexture(TextureTarget.Texture2D, _modelOverlayTexture);
+            GL.BindTexture(TextureTarget.Texture2D, _modelOverlayTexture == -1 ? 0 : _modelOverlayTexture);
 
             _shaderModel.Uniforms.SetValue("objectIdMode", ObjectIdModeDisabled);
             _shaderModel.Use();
             _vbo.Render();
             _shaderModel.Release();
+
+            _viewFbo.Release();
 
             _selectionFbo.Use();
             GL.ClearColor(Color.Black);
@@ -457,24 +454,11 @@ public class ModelRenderer
 
             DrawGizmo(Matrix4.Identity, view2d, ortho);
         }
-
         _viewFbo.Release();
 
-        {
-            // GL.PushMatrix();
-            //
-            // GL.MatrixMode(MatrixMode.Projection);
-            // GL.LoadIdentity();
-            // GL.Ortho(-1, 1, -1, 1, -1, 1);
-            // GL.MatrixMode(MatrixMode.Modelview);
-            // GL.LoadIdentity();
-
-            _shaderScreen.Use();
-            DrawFullscreenQuad();
-            _shaderScreen.Release();
-
-            // GL.PopMatrix();
-        }
+        _shaderScreen.Use();
+        DrawFullscreenQuad();
+        _shaderScreen.Release();
 
         _selectionBuffer.Copy();
         _uvBuffer.Copy();
@@ -487,8 +471,10 @@ public class ModelRenderer
             return;
 
         var msg = Marshal.PtrToStringAnsi(message, length);
-        Console.WriteLine($"OpenGL Error: {msg}");
-        Console.WriteLine(GetTrimmedStackTrace());
+        // Console.WriteLine($"OpenGL Error: {msg}");
+        // Console.WriteLine(GetTrimmedStackTrace());
+
+        throw new IOException(msg);
     }
 
     private static string GetTrimmedStackTrace([CallerMemberName] string? callerName = null)
@@ -500,25 +486,6 @@ public class ModelRenderer
                             !s.Contains(nameof(GetTrimmedStackTrace)) &&
                             (callerName == null || !s.Contains(callerName)))
         );
-    }
-
-    private static void RenderOriginAxes()
-    {
-        GL.Color4(Color4.Red);
-        GL.Begin(PrimitiveType.LineStrip);
-        GL.Vertex3(0, 0, 0);
-        GL.Vertex3(1, 0, 0);
-        GL.End();
-        GL.Color4(Color4.LawnGreen);
-        GL.Begin(PrimitiveType.LineStrip);
-        GL.Vertex3(0, 0, 0);
-        GL.Vertex3(0, 1, 0);
-        GL.End();
-        GL.Color4(Color4.Blue);
-        GL.Begin(PrimitiveType.LineStrip);
-        GL.Vertex3(0, 0, 0);
-        GL.Vertex3(0, 0, 1);
-        GL.End();
     }
 
     public void OnMouseMove(object sender, Vector2 delta)
@@ -545,7 +512,7 @@ public class ModelRenderer
         var m1 = 1; //keyboard[Key.LShift] ? 10 : 1;
         var m2 = 1; //_keyboard[Key.LControl] ? 100 : 1;
 
-        var deltaZoom = Math.Sign(delta) * d * m1 * m2;
+        var deltaZoom = delta * m1 * m2;
 
         _zoom += deltaZoom;
 
