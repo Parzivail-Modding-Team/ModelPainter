@@ -73,8 +73,11 @@ public class ModelRenderer
 		_renderContext.MouseWheel += OnMouseWheel;
 
 		renderContext.MakeCurrent();
-		GL.Enable(EnableCap.DebugOutput);
-		GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
+		if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+		{
+			GL.Enable(EnableCap.DebugOutput);
+			GL.DebugMessageCallback(DebugCallback, IntPtr.Zero);
+		}
 	}
 
 	private void CreateScreenVao()
