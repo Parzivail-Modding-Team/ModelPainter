@@ -1,4 +1,5 @@
-﻿using System.Drawing.Imaging;
+﻿using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using ModelPainter.Render.Shader;
 using ModelPainter.Resources;
@@ -112,7 +113,7 @@ public class ModelRenderer
 		GL.Enable(EnableCap.Texture2D);
 
 		GL.ActiveTexture(TextureUnit.Texture0);
-		GL.BindTexture(_viewFbo.Samples == 1 ? TextureTarget.Texture2D : TextureTarget.Texture2DMultisample, _viewFbo.Texture);
+		GL.BindTexture(TextureTarget.Texture2D, _viewFbo.Texture);
 
 		GL.BindVertexArray(_screenVao);
 		GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
@@ -185,7 +186,6 @@ public class ModelRenderer
 
 			_shaderScreen = new ShaderProgram(ResourceHelper.GetLocalStringResource("screen.frag"), ResourceHelper.GetLocalStringResource("screen.vert"));
 			_shaderScreen.Uniforms.SetValue("texScene", 0);
-			_shaderScreen.Uniforms.SetValue("samplesScene", _viewFbo.Samples);
 
 			_shaderModel = new ShaderProgram(ResourceHelper.GetLocalStringResource("model.frag"), ResourceHelper.GetLocalStringResource("model.vert"));
 			_shaderModel.Uniforms.SetValue("texModel", 1);
@@ -428,7 +428,7 @@ public class ModelRenderer
 			return;
 
 		var msg = Marshal.PtrToStringAnsi(message, length);
-		Console.WriteLine(msg);
+		Debug.WriteLine(msg);
 	}
 
 	private static void RenderOriginAxes()
