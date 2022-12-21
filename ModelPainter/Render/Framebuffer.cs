@@ -26,7 +26,8 @@ namespace ModelPainter.Render
 			}
 		}
 
-		public Framebuffer(int samples, PixelInternalFormat internalFormat = PixelInternalFormat.Rgba, PixelFormat format = PixelFormat.Rgba, PixelType pixelType = PixelType.UnsignedByte,
+		public Framebuffer(int samples, PixelInternalFormat internalFormat = PixelInternalFormat.Rgba, PixelFormat format = PixelFormat.Rgba,
+			PixelType pixelType = PixelType.UnsignedByte,
 			int unboundFbo = 0)
 		{
 			_unboundFbo = unboundFbo;
@@ -49,31 +50,21 @@ namespace ModelPainter.Render
 
 			Use();
 
-			if (_samples == 1)
-			{
-				GL.BindTexture(TextureTarget.Texture2D, Texture);
-
-				GL.TexImage2D(TextureTarget.Texture2D, 0, _internalFormat, width, height, 0, _format, _pixelType, IntPtr.Zero);
-				GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, Texture, 0);
-			}
-			else
-			{
-				GL.BindTexture(TextureTarget.Texture2DMultisample, Texture);
-
-				GL.TexImage2DMultisample(TextureTargetMultisample.Texture2DMultisample, _samples, _internalFormat, width, height, true);
-				GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2DMultisample, Texture, 0);
-			}
+			GL.BindTexture(TextureTarget.Texture2D, Texture);
+			GL.TexImage2D(TextureTarget.Texture2D, 0, _internalFormat, width, height, 0, _format, _pixelType, IntPtr.Zero);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+			GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, Texture, 0);
 
 			GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, DepthId);
-			GL.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, _samples, RenderbufferStorage.Depth24Stencil8, width, height);
-			GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+			GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, width, height);
 			GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, RenderbufferTarget.Renderbuffer, DepthId);
 
 			var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
 			if (status != FramebufferErrorCode.FramebufferComplete)
 				throw new ApplicationException($"Framebuffer status expected to be FramebufferComplete, instead was {status}");
 
-			GL.BindTexture(_samples == 1 ? TextureTarget.Texture2D : TextureTarget.Texture2DMultisample, 0);
+			GL.BindTexture(TextureTarget.Texture2D, 0);
 			Release();
 		}
 

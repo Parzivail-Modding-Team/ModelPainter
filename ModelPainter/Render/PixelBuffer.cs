@@ -44,7 +44,7 @@ public class PixelBuffer<T> : IDisposable where T : unmanaged
 			var bufferByteSize = _data.Length * sizeof(T);
 
 			GL.BindBuffer(BufferTarget.PixelPackBuffer, _bufferId);
-			GL.BufferData(BufferTarget.PixelPackBuffer, bufferByteSize, IntPtr.Zero, BufferUsageHint.StaticRead);
+			GL.BufferData(BufferTarget.PixelPackBuffer, bufferByteSize, IntPtr.Zero, BufferUsageHint.StreamCopy);
 			GL.ReadPixels(0, 0, _width, _height, _pixelFormat, _pixelType, IntPtr.Zero);
 			GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
 		}
