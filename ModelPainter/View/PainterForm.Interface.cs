@@ -44,6 +44,10 @@ public partial class PainterForm : Form
 		ClientSize = new Size(800, 450);
 		Text = "ModelPainter";
 		Icon = new Icon(ResourceHelper.GetLocalResource("icon.ico"));
+		AllowDrop = true;
+
+		DragEnter += OnDragEnter;
+		DragDrop += OnDragDrop;
 
 		_settings = ModelPainterSettings.Load(SETTINGS_FILENAME);
 
@@ -165,6 +169,21 @@ public partial class PainterForm : Form
 
 		OnSettingsChanged();
 		UpdateAbility();
+	}
+
+	private void OnDragDrop(object sender, DragEventArgs e)
+	{
+		if (e.Data?.GetData(DataFormats.FileDrop) is not string[] filenames)
+			return;
+
+		foreach (var filename in filenames)
+			Open(filename);
+	}
+
+	private void OnDragEnter(object sender, DragEventArgs e)
+	{
+		if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+			e.Effect = DragDropEffects.Copy;
 	}
 
 	private void UpdateAbility()
